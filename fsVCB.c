@@ -1,5 +1,17 @@
+/**************************************************************
+* Class:  CSC-415-01 Fall 2020
+* Name: Russell Azucenas
+* Student ID: 917422693
+* Project: Group Project - File System
+*
+* File: fsVCB.c
+*
+* Description: Manages the volume control block for the file system.
+*
+**************************************************************/
 #include "fsVCB.h"
 
+/* Volume control block info for the currently opened volume */
 char header[16] = "[File System]";
 uint64_t volumeSize;
 uint64_t blockSize;
@@ -60,15 +72,13 @@ void initializeVCB()
     printf("initVCB: totalInodeBlocks %ld", openVCB->totalInodeBlocks);
 
     openVCB->freeMapSize = freeMapSize;
-
-    /* Initialize freeBlockMap to all 0's. */
-    for (int i=0; i<freeMapSize; i++) 
+    for (int i = 0; i < freeMapSize; i++) 
     {
         openVCB->freeMap[i] = 0;
     }
 
     /* Set bits in freeMap for VCB and inodes. */
-    for (int i=0; i<inodeStartBlock+totalInodeBlocks; i++) 
+    for (int i = 0; i < inodeStartBlock + totalInodeBlocks; i++) 
     {
         setBit(openVCB->freeMap, i);
     }
@@ -104,7 +114,7 @@ uint64_t writeVCB()
         return 0;
     }
 
-    /* Write openVCB_p to disk. */
+    /* Write openVCB to disk. */
     uint64_t blocksWritten = LBAwrite(openVCB, totalVCBBlocks, VCB_START_BLOCK);
     printf("Wrote VCB in %d blocks starting at block %d.\n", totalVCBBlocks, VCB_START_BLOCK);
     return blocksWritten;
@@ -122,14 +132,14 @@ uint64_t getFreeBlock()
     return -1;
 }
 
-void printVCB() 
+void printVCB()
 {
     int size = openVCB->totalVCBBlocks * (openVCB->blockSize);
     int width = 16;
     char* char_p = (char*)openVCB;
     char ascii[width+1];
     sprintf(ascii, "%s", "................");
-    for (int i = 0; i<size; i++) 
+    for (int i = 0; i < size; i++) 
     {
         printf("%02x ", char_p[i] & 0xff);
         if (char_p[i]) 
