@@ -24,8 +24,6 @@ char* getInodeTypeName(char* buf, InodeType type)
 
 fs_dir* createInode(InodeType type, const char* path)
 {
-    printf("--------------------------[createInode]---------------------------\n");
-
     fs_dir * inode;
     char parentPath[MAX_FILEPATH_SIZE];
     fs_dir* parentNode;
