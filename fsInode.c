@@ -10,10 +10,8 @@
 *
 **************************************************************/
 #include "fsInode.h"
-#include "bitMap.h"
 
 fs_dir* inodes;
-
 char inodeTypeNames[3][64] = { "I_FILE", "I_DIR", "I_UNUSED" };
 
 char* getInodeTypeName(char* buf, InodeType type)
@@ -28,26 +26,23 @@ fs_dir* createInode(InodeType type, const char* path)
     char parentPath[MAX_FILEPATH_SIZE];
     fs_dir* parentNode;
 
-    /* Obtain current time. */
+    // Set the current creation time
     time_t currentTime;
     currentTime = time(NULL);
 
-    // call getFreeInode() to recieve the next available inode
+    // Find and assign the parent to the new inode
     inode = getFreeInode();
-
-    //find and assign the parent to the new inode
     getParentPath(parentPath, path);
     parentNode = getInode(parentPath);
 
-    /* Set properties on inode. */
+    // Set inode info
     inode->type = type;
-    // Set inode name to file name
     // strcpy(inode->name , requestedFilePathArray[requestedFilePathArraySize - 1]);
     sprintf(inode->path, "%s/%s", parentPath, inode->name);
     inode->lastAccessTime = currentTime;
     inode->lastModificationTime = currentTime;
 
-    /* Try to set the parent. If it fails, revert. */
+    // Set the inode's parent
     if (!setParent(parentNode, inode)) 
     {
         freeInode(inode);
@@ -93,13 +88,12 @@ fs_dir* getInodeByIndex(int index)
 
 int removeFromParent(fs_dir* parent, fs_dir* child) 
 {
-    /* Loop through parent's list of children until name match. */
+    // Find matching requested child from parent list
     for (int i = 0; i < parent->numChildren; i++) 
     {
         if (!strcmp(parent->children[i], child->name)) 
         {
-
-            /* Clear entry in parent's list of children. Decrement child count. */
+            // Clear the child from the list and update parent size
             strcpy(parent->children[i], "");
             parent->numChildren--;
             parent->sizeInBlocks -= child->sizeInBlocks;
@@ -107,10 +101,9 @@ int removeFromParent(fs_dir* parent, fs_dir* child)
             return 1;
         }
     }
-
+    
     printf("Could not find child '%s' in parent '%s'.\n", child->name, parent->path);
     return 0;
-
 }
 
 void writeInodes() 
@@ -120,32 +113,30 @@ void writeInodes()
 
 int writeBufferToInode(fs_dir * inode, char* buffer, size_t bufSizeBytes, uint64_t blockNumber) 
 {
-    /* Check if dataBlockPointers is full. */
+    // Get free index from the data block pointer list
     int freeIndex = -1;
     for (int i = 0; i < MAX_DATABLOCK_POINTERS; i++) 
     {
         if (inode->directBlockPointers[i] == INVALID_DATABLOCK_POINTER) 
         {
-            /* Record free dataBlockPointer index. */
             freeIndex = i;
             break;
         }
     }
 
-    /* If there is no place to put the new dataBlock pointer. Return 0 blocks/bytes written. */
+    // If no free index to insert dataBlock, return 0 
     if (freeIndex == -1) 
     {
         return 0;
     }
 
-    /* Write buffered data to disk, update inode, write inodes to disk. */
+    // Write buffer data into the data block
     LBAwrite(buffer, 1, blockNumber);
-
-    /* Record the block number in the inode, reserve the block in the freeMap and write the VCB. */
-    inode->directBlockPointers[freeIndex] = blockNumber;
     setBit(getVCB()->freeMap, blockNumber);
     writeVCB();
 
+    // Update inode info
+    inode->directBlockPointers[freeIndex] = blockNumber;
     inode->numDirectBlockPointers++;
     inode->sizeInBlocks++;
     inode->sizeInBytes += bufSizeBytes;
@@ -169,7 +160,7 @@ void freeInode(fs_dir * node)
     node->lastAccessTime = 0;
     node->lastModificationTime = 0;
 
-    /* Free all data blocks from the file */
+    // If the inode is a file, free all related data block pointers
     if(node->type == I_FILE)
     {
         for (size_t i = 0; i < node->numDirectBlockPointers; i++) 
@@ -179,6 +170,6 @@ void freeInode(fs_dir * node)
         }
     }
 
-    /* Write inode updates to disk. */
+    // Write inode changes to disk
     writeInodes();
 }
