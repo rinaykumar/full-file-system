@@ -9,20 +9,8 @@
 * Description: Header file for fsVolume.c
 *
 **************************************************************/
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <string.h>
-#include <pthread.h>
-#include <errno.h>
-#include <math.h>
-#include <time.h>
-
-#include "fsLow.h"
 #include "mfs.h"
+#include "fsLow.h"
 
 #define DATA_BLOCKS_PER_INODE 4 // Allocated blocks for each Inode
 #define VCB_START_BLOCK 0
@@ -47,6 +35,7 @@ typedef struct
 void initialize(uint64_t _volumeSize, uint64_t _blockSize);
 int allocateVCB(fs_VCB** vcb);
 void initializeVCB();
+void initializeInodes();
 fs_VCB* getVCB();
 uint64_t readVCB();
 uint64_t writeVCB();
