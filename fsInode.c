@@ -54,6 +54,20 @@ fs_dir* createInode(InodeType type, const char* path)
     return inode;
 }
 
+// Get inode with specified pathname
+fs_dir* getInode(const char *pathname)
+{
+    for (int i = 0; i < getVCB()->totalInodes; i++) 
+    {
+        printf("\tInode path: '%s'\n", inodes[i].path);
+        if (strcmp(inodes[i].path, pathname) == 0) 
+        {
+            return &inodes[i];
+        }
+    }
+    return NULL;
+}
+
 // Return first open inode in the array; return null if none found
 fs_dir* getFreeInode()
 {
