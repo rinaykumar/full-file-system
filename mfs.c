@@ -88,6 +88,26 @@ void parsePath(const char *pathname)
     }
 }
 
+char* getParentPath(char* buf, const char* path)
+{
+    // Parse the path into a tokenized array of path levels
+    parseFilePath(path);
+
+    char parentPath[MAX_FILEPATH_SIZE] = "";
+
+    // Loop till we reach the path level before the end
+    for (int i = 0; i < requestFilePathArraySize - 1; i++) 
+    {
+        // Add a separator between each path level
+        strcat(parentPath, "/");
+        strcat(parentPath, requestFilePathArray[i]);
+    }
+
+    strcpy(buf, parentPath);
+    printf("Input: %s, Parent Path: %s\n", path, buf);
+    return buf;
+}
+
 int setParent(fs_dir* parent, fs_dir* child)
 {
     // Check parent's children if child already exists
@@ -146,26 +166,6 @@ int removeChild(fs_dir* parent, fs_dir* child)
 
     printf("Failed to find child '%s' in parent '%s'.\n", child->name, parent->path);
     return 0;
-}
-
-char* getParentPath(char* buf, const char* path)
-{
-    // Parse the path into a tokenized array of path levels
-    parseFilePath(path);
-
-    char parentPath[MAX_FILEPATH_SIZE] = "";
-
-    // Loop till we reach the path level before the end
-    for (int i = 0; i < requestFilePathArraySize - 1; i++) 
-    {
-        // Add a separator between each path level
-        strcat(parentPath, "/");
-        strcat(parentPath, requestFilePathArray[i]);
-    }
-
-    strcpy(buf, parentPath);
-    printf("Input: %s, Parent Path: %s\n", path, buf);
-    return buf;
 }
 
 int fs_mkdir(const char *pathname, mode_t mode)
