@@ -154,12 +154,12 @@ dispatch_t dispatchTable[] = {
 static int dispatchcount = sizeof (dispatchTable) / sizeof (dispatch_t);
 
 // Display files for use by ls command
-int displayFiles (fdDir * dirp, int flall, int fllong)
+int displayFiles (fs_dir * dirp, int flall, int fllong)
 	{
 	if (dirp == NULL)	//get out if error
 		return (-1);
 	
-	struct fs_diriteminfo * di;
+	struct fs_dirEntry * di;
 	struct fs_stat statbuf;
 	
 	di = fs_readdir (dirp);
@@ -263,7 +263,7 @@ int cmd_ls (int argcnt, char *argvec[])
 			{
 			if (fs_isDir(argvec[k]))
 				{
-				fdDir * dirp;
+				fs_dir * dirp;
 				dirp = fs_opendir (argvec[k]);
 				displayFiles (dirp, flall, fllong);
 				}
@@ -284,7 +284,7 @@ int cmd_ls (int argcnt, char *argvec[])
 	else   // no pathname/filename specified - use cwd
 		{
 		char * path = fs_getcwd(cwd, DIRMAX_LEN);	//get current working directory
-		fdDir * dirp;
+		fs_dir * dirp;
 		dirp = fs_opendir (path);
 		return (displayFiles (dirp, flall, fllong));
 		}
