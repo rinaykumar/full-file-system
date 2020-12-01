@@ -244,6 +244,7 @@ int b_write(int fd, char * buffer, int count) {
         //write what is in our buffer
         int freeBlock = getFreeBlock();
         bytesWritten = writeBufferToInode(fcbArray[fd].file, fcbArray[fd].buf, BUFSIZE, freeBlock) * BUFSIZE;
+        fcbArray[fd].block++;
         
         //error handling
         if(bytesWritten == 0) {
@@ -265,6 +266,7 @@ int b_write(int fd, char * buffer, int count) {
             for(int i = 0; i < blocks; i++) {
                 freeBlock = getFreeBlock();
                 blockWritten += writeBufferToInode(fcbArray[fd].file, buffer + part1, BUFSIZE, freeBlock);
+                fcbArray[fd].block++;
             }
             bytesWritten = blockWritten * BUFSIZE;
 
@@ -320,6 +322,8 @@ void b_close(int fd) {
     if(fcbArray[fd].flag & O_WRONLY) {
         int freeBlock = getFreeBlock();
         int written = writeBufferToInode(fcbArray[fd].file, fcbArray[fd].buf, fcbArray[fd].buflen, freeBlock) * BUFSIZE;
+        fcbArray[fd].block++;
+        fcbArray[fd].file->numDirectBlockPointers = fcbArray[fd].block;
         //error handling
         if(written == 0) {
             printf("Error writing\n");
