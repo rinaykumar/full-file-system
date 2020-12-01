@@ -18,7 +18,6 @@
 #include <unistd.h>
 #include <time.h>
 
-#include "b_io.h"
 #include "fsVCB.h"
 #include "fsInode.h"
 
