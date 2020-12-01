@@ -66,7 +66,7 @@ typedef struct
 
 	char parent[MAX_FILEPATH_SIZE]; // Path name to parent
 	char children[MAX_NUMBER_OF_CHILDREN][MAX_FILENAME_SIZE]; // Array of children names
-	int numChildren; // Number of children in a DIR
+	int numChildren; // Number of children in a directory
 
 	time_t lastAccessTime;
 	time_t lastModificationTime;
