@@ -120,7 +120,7 @@ int setParent(fs_dir* parent, fs_dir* child)
         }
     }
 
-    if (childExists = 1) 
+    if (childExists == 1) 
     {
         printf("Directory '%s' already exists.\n", child->path);
         return 0;
@@ -133,7 +133,7 @@ int setParent(fs_dir* parent, fs_dir* child)
         return 0;
     }
 
-    //set the rest of the properties of the parent and child to correspond with each other
+    // Set other attributes of parent
     strcpy(parent->children[parent->numChildren], child->name);
     parent->numChildren++;
     parent->lastAccessTime = time(0);
@@ -164,32 +164,55 @@ int removeChild(fs_dir* parent, fs_dir* child)
         }
     }
 
-    printf("Failed to find child '%s' in parent '%s'.\n", child->name, parent->path);
+    printf("removeChild: Failed to find child '%s' in parent '%s'.\n", child->name, parent->path);
     return 0;
 }
 
 int fs_mkdir(const char *pathname, mode_t mode)
 {
-    // If using inodes as directories:
-    createInode(I_DIR, pathname);
+    // Parse the path into a tokenized array of path levels
+    parseFilePath(pathname);
 
-    // Alternative way to create directories:
-    // char newdir[] = pathname;
-    // char path1[MAX_FILEPATH_SIZE], path2[MAX_FILEPATH_SIZE], *p;
-    // mknod(newdir, S_IFDIR|mode);
-    // strcpy(path1, newdir);
-    // strcat(path1, "/.");
-    // link(newdir, path1);
-    // strcat(path1, ".");
-    // strcpy(path2, newdir);
-    // if ((p = strrchr(path2, '/')) == (char *)0) {
-    //     link(".", path1);
-    // } else {
-    //     *p = '\0';
-    //     link(path2, path1);
-    // }
+    // Combine tokens into a single char string
+    char parentPath[256] = "";
+    for (int i = 0; i < requestFilePathArraySize - 1; i++)
+    {
+        // Append a '/' before each token
+        strcat(parentPath, "/");
+        strcat(parentPath, requestFilePathArray[i]);
+    }
 
-    return 0;
+    // Return failure if directory already exists or if parent does not exist
+    fs_dir* parentDir = getInode(parentPath);
+    if (parentDir)
+    {
+        for (int i = 0; i < parentDir->numChildren; i++)
+        {
+            // Compare current child's name to the request file path level
+            int dirExists = strcmp(parentDir->children[i], requestFilePathArray[requestFilePathArraySize - 1]);
+            if (dirExists)
+            {
+                printf("mkdir: Directory already exists.");
+                return -1;
+            }
+        }
+    }
+    else
+    {
+        printf("mkdir: Parent does not exist.");
+        return -1;
+    }
+
+    // Can finally create the directory
+    fs_dir* newDir = createInode(I_DIR, pathname);
+    if (newDir != NULL)
+    {
+        writeInodes();
+        return 0;
+    }
+
+    printf("mkdir: Failed to create inode. '%s'.\n", pathname);
+    return -1;
 }
 
 int fs_rmdir(const char *pathname)
