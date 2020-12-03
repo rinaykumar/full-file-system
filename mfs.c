@@ -147,6 +147,33 @@ int setParent(fs_dir* parent, fs_dir* child)
     return 1;
 }
 
+fs_dir* inodes;
+void fs_init() 
+{
+    printf("totalInodeBlocks %ld, blockSize %ld\n", getVCB()->totalInodeBlocks, getVCB()->blockSize);
+    inodes = calloc(getVCB()->totalInodeBlocks, getVCB()->blockSize);
+    printf("Inodes allocated at %p.\n", inodes);
+
+    uint64_t blocksRead = LBAread(inodes, getVCB()->totalInodeBlocks, getVCB()->inodeStartBlock);
+    printf("%d inode blocks were read.\n", blocksRead);
+
+    // Return failed if not enough blocks read
+    if (blocksRead != getVCB()->totalInodeBlocks)
+    {
+        printf("fs_init: Failed to read all inode blocks.\n");
+        fs_close();
+        exit(0);
+    }
+
+    // Initialize the root directory
+    fs_setcwd("/root");
+}
+
+void fs_close()
+{
+    free(inodes);
+}
+
 int fs_mkdir(const char *pathname, mode_t mode)
 {
     // Parse the path into a tokenized array of path levels
