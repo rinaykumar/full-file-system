@@ -91,6 +91,9 @@ int fs_delete(char* filename);	//removes a file
 /* Other functions */
 void fs_init();
 void fs_close();
+int setParent(fs_dir* parent, fs_dir* child);
+int removeChild(fs_dir* parent, fs_dir* child);
+char* getParentPath(char* buf, const char* path);
 
 struct fs_stat
 	{

@@ -83,7 +83,7 @@ int b_open(char * filename, int flags) {
     //if directory entry does not exist, create one and initialize if create flag is set
     if(directoryEntry == NULL) {
         if(flags & O_CREAT) {
-            directoryEntry = createInode("I_FILE", filepath);
+            directoryEntry = createInode(I_FILE, filepath);
             directoryEntry->sizeInBytes = 0;
         } else {
             return -1;
