@@ -239,9 +239,28 @@ fs_dir* fs_opendir(const char *name)
     return openedDir;
 }
 
+// The logic for this might not be right 
 struct fs_dirEntry *fs_readdir(fs_dir *dirp) 
 {
+    struct fs_dirEntry dirEntry;
 
+    // Child path
+    char cpath[MAX_FILEPATH_SIZE];
+    
+    // Add path, /, and children to cpath
+    strcpy(cpath, dirp->path);
+    strcat(cpath, "/");
+    strcat(cpath, dirp->children);
+
+    // Get inode of child
+    fs_dir* inode = getInode(cpath);
+
+    // Set indoe properties to directory entry
+    strcpy(dirEntry.d_name, inode->name);
+    dirEntry.d_ino = inode->inodeIndex;
+    
+    // Retun directory entry
+    return &dirEntry;
 }
 
 int fs_closedir(fs_dir *dirp)
