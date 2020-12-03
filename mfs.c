@@ -157,7 +157,7 @@ void fs_init()
     printf("Inodes allocated at %p.\n", inodes);
 
     uint64_t blocksRead = LBAread(inodes, getVCB()->totalInodeBlocks, getVCB()->inodeStartBlock);
-    printf("%d inode blocks were read.\n", blocksRead);
+    printf("%ld inode blocks were read.\n", blocksRead);
 
     // Return failed if not enough blocks read
     if (blocksRead != getVCB()->totalInodeBlocks)
@@ -229,9 +229,10 @@ int fs_rmdir(const char *pathname)
 
     // Get the inode
     fs_dir* inodeToRemove = getInode(pathname);
+    fs_dir* parentInode = getInode(inodeToRemove->parent);
 
     // Remove inode from parent
-    removeFromParent(inodeToRemove->parent, inodeToRemove); // Need to access inode's parent and pass into function
+    removeFromParent(parentInode, inodeToRemove); // Need to access inode's parent and pass into function
 
     // Free inode
     freeInode(inodeToRemove);
@@ -250,12 +251,10 @@ fs_dir* fs_opendir(const char *name)
     return inode;
 }
 
+struct fs_dirEntry dirEntry;
 struct fs_dirEntry *fs_readdir(fs_dir *dirp) 
 {
     // Based on the following: "readdir returns a pointer to a dirent structure representing the next directory entry"
-    
-    struct fs_dirEntry dirEntry;
-
     // Get inode
     fs_dir* inode = getInode(dirp->path);
 
@@ -367,9 +366,10 @@ int fs_delete(char* filename)
 
     // Get inode
     fs_dir* inode = getInode(filename);
+    fs_dir* parentInode = getInode(inode->parent);
 
     // Remove indoe from parent
-    removeFromParent(inode->parent, inode);
+    removeFromParent(parentInode, inode);
 
     // Free inode
     freeInode(inode);
