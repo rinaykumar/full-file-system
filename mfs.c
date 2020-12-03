@@ -238,33 +238,28 @@ fs_dir* fs_opendir(const char *name)
     return openedDir;
 }
 
-// The logic for this might not be right 
 struct fs_dirEntry *fs_readdir(fs_dir *dirp) 
 {
+    // Based on the following: "readdir returns a pointer to a dirent structure representing the next directory entry"
+    
     struct fs_dirEntry dirEntry;
 
-    // Child path
-    char cpath[MAX_FILEPATH_SIZE];
-    
-    // Add path, /, and children to cpath
-    strcpy(cpath, dirp->path);
-    strcat(cpath, "/");
-    strcat(cpath, dirp->children);
+    // Get inode
+    fs_dir* inode = getInode(dirp->path);
 
-    // Get inode of child
-    fs_dir* inode = getInode(cpath);
-
-    // Set indoe properties to directory entry
+    // Set inode properties to directory entry
     strcpy(dirEntry.d_name, inode->name);
     dirEntry.d_ino = inode->inodeIndex;
+    dirEntry.fileType = inode->type;
     
     // Retun directory entry
     return &dirEntry;
 }
 
 int fs_closedir(fs_dir *dirp)
-{
-
+{   
+    // Not sure what is supposed to be done here
+    freeInode(dirp);
 }
 
 char* fs_getcwd(char *buf, size_t size) 
@@ -343,7 +338,31 @@ int fs_isDir(char * path)
 // Removes a file
 int fs_delete(char* filename) 
 {
+    // First way:
 
+    // Get all inodes, store into allInodes
+    // allInodes = all inodes
+    // Loop through inodes and check for filename match in children
+    // for (int i = 0; i < allInodes->numChildren; i++) {
+    //     if (strcmp(filename, allInodes->children[i])) {
+    //         // Delete child/file 
+
+    //         return 1;
+    //     }
+    // }
+
+    // Second way:
+
+    // Get inode
+    fs_dir* inode = getInode(filename);
+
+    // Remove indoe from parent
+    removeFromParent(inode->parent, inode);
+
+    // Free inode
+    freeInode(inode);
+
+    return 0;
 }	
 
 fs_dir* inodes;
@@ -376,11 +395,27 @@ void fs_close()
 int fs_stat(const char *path, struct fs_stat *buf) 
 {
     // get inode for path
-    // if inode exists
-        // set info for buf
-        // st_blksize = getVCB()->blockSize
-        // st_blocks = 2
+    fs_dir* inode = getInode(path);     // Should path be parsed first?
 
-        // return 1
-    // return 0
+    // if inode exists
+    if (inode) {
+        // set info for buf
+        buf->st_size = inode->sizeInBytes;
+        
+        // st_blksize = getVCB()->blockSize
+        buf->st_blksize = getVCB()->blockSize;
+        
+        // st_blocks = 2
+        buf->st_blocks = 2;
+        
+        // Access and modification times
+        buf->st_accesstime = inode->lastAccessTime;
+        buf->st_modtime = inode->lastModificationTime;
+
+        // buf->st_createtime = ?
+
+        return 1;
+    }
+
+    return 0;
 }
