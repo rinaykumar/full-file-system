@@ -93,6 +93,8 @@ int b_open(char * filename, int flags) {
     //if flag has trancate, reinitialize the file size to 0
     if(flags & O_TRUNC) {
         directoryEntry->sizeInBytes = 0;
+        directoryEntry->numDirectBlockPointers = 0;
+        directoryEntry->sizeInBlocks = 0;
     }
 
     //find empty fcb index

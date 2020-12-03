@@ -394,7 +394,7 @@ int cmd_mv (int argcnt, char *argvec[])
 			char* srcParentPath;
 			getParentPath(srcParentPath, source);
 			fs_dir* oldParent = opendir(srcParentPath);
-			int removed = removeChild(oldParent, sourceEntry);
+			int removed = removeFromParent(oldParent, sourceEntry);
 			if(removed == 0) {
 				printf("Error: cannot remove from parent.");
 				return -1;
