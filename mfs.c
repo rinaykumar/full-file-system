@@ -24,6 +24,7 @@
 #include "mfs.h"
 #include "fsInode.h"
 #include "fsVCB.h"
+#include "b_io.h"
 
 // Current working directory path
 char cwdPath[MAX_FILEPATH_SIZE];
@@ -240,10 +241,13 @@ int fs_rmdir(const char *pathname)
 
 fs_dir* fs_opendir(const char *name) 
 {
-    // Call getInode 
-    fs_dir* openedDir = getInode(name);
-
-    return openedDir;
+    int openCode = b_open(name, 0);
+    if (openCode < 0)
+    {
+        return NULL;
+    }
+    fs_dir* inode = getInode(name);
+    return inode;
 }
 
 struct fs_dirEntry *fs_readdir(fs_dir *dirp) 
