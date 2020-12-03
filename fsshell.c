@@ -22,6 +22,7 @@
 #include <readline/history.h>
 #include <getopt.h>
 #include <string.h>
+#include <fcntl.h>
 
 #include "mfs.h"
 
@@ -344,8 +345,82 @@ int cmd_cp (int argcnt, char *argvec[])
 int cmd_mv (int argcnt, char *argvec[])
 	{
 #if (CMDMV_ON == 1)				
-	return -99;
 	// **** TODO ****  For you to implement	
+	//check if argcnt == 3
+	if(argcnt != 3) {
+		printf("Usage: mv source destination");
+		return (-1);
+	} else {
+		//check if source and destination is relative path
+		char* source = argvec[1];
+		char* dest = argvec[2];
+		char* cwd;
+		char* destName;
+		if(source[0] != "/") {
+			//get current working directory
+			getcwd(cwd, DIRMAX_LEN);
+
+			//concatenate to source
+			strcat(cwd, source);
+			source = cwd;
+		}
+
+		if(dest[0] != "/") {
+			destName = dest;
+			//get current working directory and concatenate to dest
+			getcwd(cwd, DIRMAX_LEN);
+			strcat(cwd, dest);
+			dest = cwd;
+		}
+
+		//if destination does not exist, create one
+		fs_dir* destEntry = opendir(dest);
+		InodeType destType;
+		if(destEntry == NULL) {
+			//check whether the destination is file or not
+			if(dest[strlen(dest) - 4] == ".") {
+				destType = I_FILE;
+			} else {
+				destType = I_DIR;
+			}
+
+			destEntry = createInode(destType, dest);
+		}
+
+		//check whether destination is file or directory
+		destType = destEntry->type;
+		int moved;
+		fs_dir* sourceEntry = opendir(source);
+		if(destType == I_DIR) {
+			//if directory, put source as the child of dest
+			char* srcParentPath;
+			getParentPath(srcParentPath, source);
+			fs_dir* oldParent = opendir(srcParentPath);
+			int removed = removeChild(oldParent, sourceEntry);
+			if(removed == 0) {
+				printf("Error: cannot remove from parent.");
+				return -1;
+			}
+			int moved = setParent(destEntry,sourceEntry);
+			if(moved == 0) {
+				printf("Error: Cannot move to %s", dest);
+				return -1;
+			}
+		} else {
+			//if file, check if source is file
+			if(sourceEntry->type == I_FILE) {
+				//if source is file, rename the source and delete dest
+				sourceEntry->name = destName;
+				sourceEntry->path = dest;
+				fs_delete(destEntry->name);
+			} else {
+				printf("Cannot move directory to file");
+				return -1;
+			}
+		}
+	}
+
+	return 0;
 #endif
 	}
 
