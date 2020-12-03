@@ -23,6 +23,7 @@
 #include <math.h>
 #include "mfs.h"
 #include "fsInode.h"
+#include "fsVCB.h"
 
 // Current working directory path
 char cwdPath[MAX_FILEPATH_SIZE];
@@ -34,7 +35,7 @@ char requestFilePath[MAX_FILEPATH_SIZE];
 char requestFilePathArray[MAX_DIRECTORY_DEPTH][MAX_FILENAME_SIZE];
 int requestFilePathArraySize = 0;
 
-void parsePath(const char *pathname)
+void parseFilePath(const char *pathname)
 {
     // Set old path as empty (null terminator)
     requestFilePath[0] = '\0';

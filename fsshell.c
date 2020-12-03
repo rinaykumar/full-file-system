@@ -23,6 +23,11 @@
 #include <fcntl.h>
 
 #include "mfs.h"
+#include "fsVCB.h"
+#include "fsLow.h"
+#include "fsInode.h"
+#include "bitMap.h"
+#include "b_io.h"
 
 /***************  START LINUX TESTING CODE FOR SHELL ***************/
 #define TEMP_LINUX 0  //MUST be ZERO for working with your file system

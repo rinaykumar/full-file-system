@@ -41,6 +41,7 @@ uint64_t readVCB();
 uint64_t writeVCB();
 uint64_t getFreeBlock();
 void printVCB();
+uint64_t divUp(u_int64_t a, u_int64_t b);
 
 int createVolume(char* volumeName, uint64_t _volumeSize, uint64_t _blockSize);
 void openVolume(char* volumeName);

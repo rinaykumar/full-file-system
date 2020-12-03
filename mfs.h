@@ -18,8 +18,8 @@
 #include <unistd.h>
 #include <time.h>
 
-#include "fsVCB.h"
-#include "fsInode.h"
+// #include "fsVCB.h"
+// #include "fsInode.h"
 
 #define MAX_FILEPATH_SIZE 225
 #define	MAX_FILENAME_SIZE 20

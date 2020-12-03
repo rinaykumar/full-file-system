@@ -10,6 +10,7 @@
 *
 **************************************************************/
 #include "fsInode.h"
+#include "fsVCB.h"
 
 fs_dir* inodes;
 char inodeTypeNames[3][64] = { "I_FILE", "I_DIR", "I_UNUSED" };

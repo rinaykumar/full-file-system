@@ -10,6 +10,8 @@
 *
 **************************************************************/
 #include "fsVCB.h"
+#include <stdio.h>
+
 
 // Info for the volume control block
 char header[16] = "[File System]";
@@ -23,7 +25,7 @@ uint32_t inodeTotal;
 uint32_t inodeBlockTotal;
 uint32_t freeMapSize;
 
-int initialized = 0;
+int initialized2 = 0;
 fs_VCB* openVCB;
 
 // Initializes the info for the volume control block and allocates to memory
@@ -33,7 +35,7 @@ void initialize(uint64_t _volumeSize, uint64_t _blockSize)
     blockSize = _blockSize;
     diskSizeBlocks = divUp(volumeSize, blockSize);
     freeMapSize = diskSizeBlocks <= sizeof(uint32_t) * 8 ? 1 : diskSizeBlocks / sizeof(uint32_t) / 8;
-    vcbTotal = divUp(sizeof(fs_VCB) + sizeof(uint32_t[freeMapSize]), blockSize);
+    vcbTotal = divUp(sizeof(fs_VCB) + sizeof(uint64_t[freeMapSize]), blockSize);
     inodeStartBlock = VCB_START_BLOCK + vcbTotal;
     inodeTotal = (diskSizeBlocks - inodeStartBlock) / (DATA_BLOCKS_PER_INODE + divUp(sizeof(fs_dir), blockSize));
     inodeBlockTotal = divUp(inodeTotal * sizeof(fs_dir), blockSize);
@@ -42,7 +44,7 @@ void initialize(uint64_t _volumeSize, uint64_t _blockSize)
     int vcbSize = allocateVCB(&openVCB);
     printf("Allocated %d blocks for VCB.\n", vcbSize);
 
-    initialized = 1;
+    initialized2 = 1;
 }
 
 // Rounded up division of integers
@@ -60,7 +62,7 @@ int allocateVCB(fs_VCB** vcb)
 
 void initializeVCB() 
 {
-    if (!initialized) 
+    if (!initialized2) 
     {
         printf("VCB system not initialized.\n");
         return;
@@ -98,7 +100,7 @@ void initializeVCB()
 
 void initializeInodes() 
 {
-    if (!initialized) 
+    if (!initialized2) 
     {
         printf("initializeInodes: System not initialized.\n");
         return;
@@ -155,7 +157,7 @@ fs_VCB* getVCB()
 // Reads the VCB from the disk
 uint64_t readVCB()
 {
-    if (!initialized) 
+    if (!initialized2) 
     {
         printf("readVCB: VCB system not initialized.\n");
         return 0;
@@ -169,7 +171,7 @@ uint64_t readVCB()
 // Write all changes on VCB to the disk
 uint64_t writeVCB() 
 {
-    if (!initialized) 
+    if (!initialized2) 
     {
         printf("writeVCB: VCB system not initialized.\n");
         return 0;
@@ -247,7 +249,7 @@ int createVolume(char* volumeName, uint64_t volumeSize, uint64_t blockSize)
     // Initalize the volume control block
     if (retVal == 0) 
     {
-        init(volumeSize, blockSize);
+        initialize(volumeSize, blockSize);
         initializeVCB();
         initializeInodes();
     }
@@ -258,7 +260,7 @@ int createVolume(char* volumeName, uint64_t volumeSize, uint64_t blockSize)
 
 void openVolume(char* volumeName) 
 {
-    if (!initialized) 
+    if (!initialized2) 
     {
         uint64_t volumeSize;
         uint64_t blockSize;
@@ -266,7 +268,7 @@ void openVolume(char* volumeName)
         int retVal =  startPartitionSystem(volumeName, &volumeSize, &blockSize);
         if (retVal == 0) 
         {
-            init(volumeSize, blockSize);
+            initialize(volumeSize, blockSize);
             readVCB();
             printVCB();
         }
@@ -279,11 +281,11 @@ void openVolume(char* volumeName)
 
 void closeVolume() 
 {
-    if (initialized) 
+    if (initialized2) 
     {
         closePartitionSystem();
         free(openVCB);
-        initialized = 0;
+        initialized2 = 0;
     } 
     else 
     {
