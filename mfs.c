@@ -229,8 +229,7 @@ int fs_rmdir(const char *pathname)
     fs_dir* inodeToRemove = getInode(pathname);
 
     // Remove inode from parent
-    fs_dir* parentInode = getInode(inodeToRemove->parent);
-    removeFromParent(parentInode, inodeToRemove); // Need to access inode's parent and pass into function
+    removeFromParent(inodeToRemove->parent, inodeToRemove); // Need to access inode's parent and pass into function
 
     // Free inode
     freeInode(inodeToRemove);
@@ -365,8 +364,7 @@ int fs_delete(char* filename)
     fs_dir* inode = getInode(filename);
 
     // Remove indoe from parent
-    fs_dir* parentInode = getInode(inode->parent);
-    removeFromParent(parentInode, inode);
+    removeFromParent(inode->parent, inode);
 
     // Free inode
     freeInode(inode);
