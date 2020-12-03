@@ -155,7 +155,7 @@ void fs_init()
     printf("Inodes allocated at %p.\n", inodes);
 
     uint64_t blocksRead = LBAread(inodes, getVCB()->totalInodeBlocks, getVCB()->inodeStartBlock);
-    printf("%d inode blocks were read.\n", blocksRead);
+    printf("%ld inode blocks were read.\n", blocksRead);
 
     // Return failed if not enough blocks read
     if (blocksRead != getVCB()->totalInodeBlocks)
@@ -177,7 +177,7 @@ void fs_close()
 int fs_mkdir(const char *pathname, mode_t mode)
 {
     // Parse the path into a tokenized array of path levels
-    parseFilePath(pathname);
+    parsePath(pathname);
 
     // Combine tokens into a single char string
     char parentPath[256] = "";
@@ -246,11 +246,10 @@ fs_dir* fs_opendir(const char *name)
     return openedDir;
 }
 
+struct fs_dirEntry dirEntry;
 struct fs_dirEntry *fs_readdir(fs_dir *dirp) 
 {
     // Based on the following: "readdir returns a pointer to a dirent structure representing the next directory entry"
-    
-    struct fs_dirEntry dirEntry;
 
     // Get inode
     fs_dir* inode = getInode(dirp->path);
@@ -260,7 +259,7 @@ struct fs_dirEntry *fs_readdir(fs_dir *dirp)
     dirEntry.d_ino = inode->inodeIndex;
     dirEntry.fileType = inode->type;
     
-    // Retun directory entry
+    // Return directory entry
     return &dirEntry;
 }
 
