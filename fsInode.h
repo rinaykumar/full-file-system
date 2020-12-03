@@ -17,7 +17,6 @@ fs_dir* createInode(InodeType type, const char* path);
 fs_dir* getInode(const char *pathname);
 fs_dir* getFreeInode();
 fs_dir* getInodeByIndex(int index);
-fs_dir* getInode(const char* pathname);
 int removeFromParent(fs_dir* parent, fs_dir* child);
 void writeInodes();
 int writeBufferToInode(fs_dir * inode, char* buffer, size_t bufSizeBytes, uint64_t blockNumber);
