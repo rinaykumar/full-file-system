@@ -375,11 +375,12 @@ void fs_close()
 
 int fs_stat(const char *path, struct fs_stat *buf) 
 {
+    // get inode for path
+    // if inode exists
+        // set info for buf
+        // st_blksize = getVCB()->blockSize
+        // st_blocks = 2
 
-}
-
-// Not sure if this is supposed to be here, but it was in mfs.h 
-char* getInodeTypeName(char* buf, InodeType type) 
-{
-
+        // return 1
+    // return 0
 }
