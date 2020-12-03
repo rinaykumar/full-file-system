@@ -90,7 +90,7 @@ void parsePath(const char *pathname)
 char* getParentPath(char* buf, const char* path)
 {
     // Parse the path into a tokenized array of path levels
-    parseFilePath(path);
+    parsePath(path);
 
     char parentPath[MAX_FILEPATH_SIZE] = "";
 
@@ -286,7 +286,7 @@ char* fs_getcwd(char *buf, size_t size)
 int fs_setcwd(char *buf) 
 {
     // Parse the path into a tokenized array of path levels
-    parseFilePath(buf);
+    parsePath(buf);
 
     // Check if inode exists
     fs_dir* inode = getInode(requestFilePath);
