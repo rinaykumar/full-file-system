@@ -147,53 +147,6 @@ int setParent(fs_dir* parent, fs_dir* child)
     return 1;
 }
 
-int removeChild(fs_dir* parent, fs_dir* child) 
-{
-    
-    for (int i = 0; i < parent->numChildren; i++) 
-    {
-        // If matching child; delete it
-        if (!strcmp(parent->children[i], child->name)) 
-        {
-            strcpy(parent->children[i], "");
-            parent->numChildren--;
-            parent->sizeInBlocks -= child->sizeInBlocks;
-            parent->sizeInBytes -= child->sizeInBytes;
-            return 1;
-        }
-    }
-
-    printf("removeChild: Failed to find child '%s' in parent '%s'.\n", child->name, parent->path);
-    return 0;
-}
-
-fs_dir* inodes;
-void fs_init() 
-{
-    printf("totalInodeBlocks %ld, blockSize %ld\n", getVCB()->totalInodeBlocks, getVCB()->blockSize);
-    inodes = calloc(getVCB()->totalInodeBlocks, getVCB()->blockSize);
-    printf("Inodes allocated at %p.\n", inodes);
-
-    uint64_t blocksRead = LBAread(inodes, getVCB()->totalInodeBlocks, getVCB()->inodeStartBlock);
-    printf("%d inode blocks were read.\n", blocksRead);
-
-    // Return failed if not enough blocks read
-    if (blocksRead != getVCB()->totalInodeBlocks)
-    {
-        printf("fs_init: Failed to read all inode blocks.\n");
-        fs_close();
-        exit(0);
-    }
-
-    // Initialize the root directory
-    fs_setcwd("/root");
-}
-
-void fs_close()
-{
-    free(inodes);
-}
-
 int fs_mkdir(const char *pathname, mode_t mode)
 {
     // Parse the path into a tokenized array of path levels
