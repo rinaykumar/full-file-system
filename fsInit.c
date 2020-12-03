@@ -16,7 +16,7 @@ int main(int argc, char* argv[])
     // Needs volumeName in arguments
     if (argc != 2) 
     {
-        printf("Missing arguments. Try adding the volumeName to the args.\n");
+        printf("Missing arguments. Command: make run fsInit volumeName\n");
         return 0;
     }
 
