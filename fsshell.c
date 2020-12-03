@@ -410,8 +410,8 @@ int cmd_mv (int argcnt, char *argvec[])
 			//if file, check if source is file
 			if(sourceEntry->type == I_FILE) {
 				//if source is file, rename the source and delete dest
-				sourceEntry->name = destName;
-				sourceEntry->path = dest;
+				strcpy(sourceEntry->name, destName);
+				strcpy(sourceEntry->path, dest);
 				fs_delete(destEntry->name);
 			} else {
 				printf("Cannot move directory to file");
