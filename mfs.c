@@ -9,7 +9,6 @@
 * Description: TDB
 *
 **************************************************************/
-
 // All of these may not be needed
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -347,14 +346,31 @@ int fs_delete(char* filename)
 
 }	
 
+fs_dir* inodes;
 void fs_init() 
 {
+    printf("totalInodeBlocks %ld, blockSize %ld\n", getVCB()->totalInodeBlocks, getVCB()->blockSize);
+    inodes = calloc(getVCB()->totalInodeBlocks, getVCB()->blockSize);
+    printf("Inodes allocated at %p.\n", inodes);
 
+    uint64_t blocksRead = LBAread(inodes, getVCB()->totalInodeBlocks, getVCB()->inodeStartBlock);
+    printf("%d inode blocks were read.\n", blocksRead);
+
+    // Return failed if not enough blocks read
+    if (blocksRead != getVCB()->totalInodeBlocks)
+    {
+        printf("fs_init: Failed to read all inode blocks.\n");
+        fs_close();
+        exit(0);
+    }
+
+    // Initialize the root directory
+    fs_setcwd("/root");
 }
 
 void fs_close()
 {
-
+    free(inodes);
 }
 
 int fs_stat(const char *path, struct fs_stat *buf) 
