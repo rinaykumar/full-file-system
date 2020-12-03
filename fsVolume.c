@@ -15,7 +15,7 @@
 int main (int argc, char* argv[]) 
 {
     // Needs volumeName, volumeSize, and blockSize in arguments
-    if (argc != 4) 
+    if (argc < 4) 
     {
         printf("Missing arguments. Command: make run fsVolume.c volumeName volumeSize blockSize\n");
         return 0;
