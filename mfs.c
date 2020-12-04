@@ -289,8 +289,16 @@ fs_dir* fs_opendir(const char *name)
 }
 
 struct fs_dirEntry dirEntry;
+int childIndex;
 struct fs_dirEntry *fs_readdir(fs_dir *dirp) 
 {
+    // Check if index is at the end
+    if (childIndex == dirp->numChildren)
+    {
+        childIndex = 0;
+        return NULL;
+    }
+
     // Based on the following: "readdir returns a pointer to a dirent structure representing the next directory entry"
     // Get inode
     fs_dir* inode = getInode(dirp->path);
@@ -299,6 +307,9 @@ struct fs_dirEntry *fs_readdir(fs_dir *dirp)
     strcpy(dirEntry.d_name, inode->name);
     dirEntry.d_ino = inode->inodeIndex;
     dirEntry.fileType = inode->type;
+
+    // Increment child index
+    childIndex++;
     
     // Retun directory entry
     return &dirEntry;
