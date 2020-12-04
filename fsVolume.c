@@ -10,7 +10,10 @@
 *
 **************************************************************/
 #include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
 #include "mfs.h"
+#include "fsVCB.h"
 
 int main (int argc, char* argv[]) 
 {

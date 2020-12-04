@@ -155,7 +155,7 @@ void fs_init()
     printf("totalInodeBlocks %ld, blockSize %ld\n", getVCB()->totalInodeBlocks, getVCB()->blockSize);
     inodes = calloc(getVCB()->totalInodeBlocks, getVCB()->blockSize);
     printf("Inodes allocated at %p.\n", inodes);
-    printf("InodeStartBlock: %d\n", getVCB()->inodeStartBlock);
+    printf("InodeStartBlock: %ld\n", getVCB()->inodeStartBlock);
     uint64_t blocksRead = LBAread(inodes, getVCB()->totalInodeBlocks, getVCB()->inodeStartBlock);
     printf("%ld inode blocks were read.\n", blocksRead);
 
@@ -215,7 +215,7 @@ int fs_mkdir(const char *pathname, mode_t mode)
     fs_dir* newDir = createInode(I_DIR, pathname);
     if (newDir != NULL)
     {
-        writeInodes();
+        LBAwrite(inodes, getVCB()->totalInodeBlocks, getVCB()->inodeStartBlock);
         return 0;
     }
 

@@ -10,7 +10,10 @@
 *
 **************************************************************/
 #include "fsVCB.h"
+#include "bitMap.h"
+#include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 
 
 // Info for the volume control block
@@ -122,7 +125,7 @@ void initializeInodes()
     inodes[0].numDirectBlockPointers = 0;
 
     // Initialize rest of inodes
-    for (int i = 1; i<inodeTotal; i++) 
+    for (int i = 1; i < inodeTotal; i++) 
     {
         strcpy(inodes[i].parent, "");
         strcpy(inodes[i].name, "");
@@ -144,7 +147,8 @@ void initializeInodes()
 
     // Write inode changes to disk
     char* char_p = (char*) inodes;
-    LBAwrite(char_p, inodeBlockTotal, inodeStartBlock);
+    uint64_t blocksWritten = LBAwrite(char_p, inodeBlockTotal, inodeStartBlock);
+    printf("BLOCKS WRITTEN: %ld\n", blocksWritten);
     printf("Wrote %d inodes of size %ld bytes each starting at block %d.\n", inodeTotal, sizeof(fs_dir), inodeStartBlock);
     free(inodes);
 }
@@ -226,7 +230,7 @@ void printVCB()
             sprintf(ascii, "%s", "................");
         }
     }
-    printf("VCB Size: %d bytes\n", size);
+    printf("Printed VCB Size: %d bytes\n", size);
 }
 
 int createVolume(char* volumeName, uint64_t volumeSize, uint64_t blockSize) 
@@ -262,13 +266,13 @@ void openVolume(char* volumeName)
 {
     if (!initialized2) 
     {
-        uint64_t volumeSize;
-        uint64_t blockSize;
+        uint64_t existingVolumeSize;
+        uint64_t existingBlockSize;
 
-        int retVal =  startPartitionSystem(volumeName, &volumeSize, &blockSize);
-        if (retVal == 0) 
+        int retVal = startPartitionSystem(volumeName, &existingVolumeSize, &existingBlockSize);
+        if (!retVal) 
         {
-            initialize(volumeSize, blockSize);
+            initialize(existingVolumeSize, existingBlockSize);
             readVCB();
             printVCB();
         }

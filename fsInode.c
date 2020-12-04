@@ -9,6 +9,8 @@
 * Description: Handles the Inode array. Holds information about each directory.
 *
 **************************************************************/
+#include <stdio.h>
+#include <string.h>
 #include "fsInode.h"
 #include "fsVCB.h"
 
@@ -167,9 +169,12 @@ void freeInode(fs_dir * node)
     printf("Freeing inode: '%s'\n", node->path);
     node->inUse = 0;
     node->type = I_UNUSED;
-    node->name[0] = NULL;
-    node->path[0] = NULL;
-    node->parent[0] = NULL;
+    strcpy(node->name, "");
+    strcpy(node->path, "");
+    strcpy(node->parent, "");
+    //node->name[0] = NULL;
+    //node->path[0] = NULL;
+    //node->parent[0] = NULL;
     node->sizeInBlocks = 0;
     node->sizeInBytes = 0;
     node->lastAccessTime = 0;
