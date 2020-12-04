@@ -33,11 +33,14 @@
 # will delete the executable and any object files in your directory.
 #
 
+VOLUMENAME = SampleVolume
+VOLUMESIZE = 10000000
+BLOCKSIZE = 512
 
 ROOTNAME=fsshell
 HW=
 FOPTION=
-RUNOPTIONS=SampleVolume 10000000 512
+RUNOPTIONS=$(VOLUMENAME) $(VOLUMESIZE) $(BLOCKSIZE)
 CC=gcc
 CFLAGS= -g -I.
 LIBS =pthread
@@ -48,11 +51,28 @@ OBJ = $(ROOTNAME)$(HW)$(FOPTION).o $(ADDOBJ)
 %.o: %.c $(DEPS)
 	$(CC) -c -o $@ $< $(CFLAGS) 
 
-$(ROOTNAME)$(HW)$(FOPTION): $(OBJ)
+$(ROOTNAME)$(HW)$(FOPTION): $(ADDOBJ)
 	$(CC) -o $@ $^ $(CFLAGS) -lm -l readline -l $(LIBS)
 
+fsVolume: fsVolume.o $(ADDOBJ)
+	$(CC) -o $@ $^ $(CFLAGS) -lm -l $(LIBS)
+
+fsInit: fsInit.o $(ADDOBJ)
+	$(CC) -o $@ $^ $(CFLAGS) -lm -l $(LIBS)
+
 clean:
-	rm *.o $(ROOTNAME)$(HW)$(FOPTION)
+	rm *.o fsVolume fsInit
+	rm *.o $(ROOTNAME)$(HW)$(FOPTION) 
+	
+
+init:
+	make fsVolume
+	./fsVolume $(VOLUMENAME) $(VOLUMESIZE) $(BLOCKSIZE)
+	make fsInit
+	./fsInit $(VOLUMENAME)
+
+erase:
+	rm $(VOLUMENAME)
 
 run: $(ROOTNAME)$(HW)$(FOPTION)
 	./$(ROOTNAME)$(HW)$(FOPTION) $(RUNOPTIONS)
