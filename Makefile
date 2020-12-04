@@ -57,18 +57,20 @@ $(ROOTNAME)$(HW)$(FOPTION): $(ADDOBJ)
 fsVolume: fsVolume.o $(ADDOBJ)
 	$(CC) -o $@ $^ $(CFLAGS) -lm -l $(LIBS)
 
-fsInit: fsInit.o $(ADDOBJ)
+fsTest: fsTest.o $(ADDOBJ)
 	$(CC) -o $@ $^ $(CFLAGS) -lm -l $(LIBS)
 
 clean:
-	rm *.o fsVolume fsInit
+	rm *.o fsVolume fsTest
 	rm *.o $(ROOTNAME)$(HW)$(FOPTION) 
 
-init:
+format:
 	make fsVolume
 	./fsVolume $(VOLUMENAME) $(VOLUMESIZE) $(BLOCKSIZE)
-	make fsInit
-	./fsInit $(VOLUMENAME)
+
+test:
+	make fsTest
+	./fsTest $(VOLUMENAME)
 
 erase:
 	rm $(VOLUMENAME)
