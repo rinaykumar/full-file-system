@@ -93,6 +93,7 @@ void fs_init();
 void fs_close();
 int setParent(fs_dir* parent, fs_dir* child);
 char* getParentPath(char* buf, const char* path);
+fs_dir* createInode(InodeType type, const char* path);
 
 struct fs_stat
 	{

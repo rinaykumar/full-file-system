@@ -149,6 +149,40 @@ int setParent(fs_dir* parent, fs_dir* child)
     return 1;
 }
 
+fs_dir* createInode(InodeType type, const char* path)
+{
+    fs_dir * inode;
+    char parentPath[MAX_FILEPATH_SIZE];
+    fs_dir* parentNode;
+
+    // Set the current creation time
+    time_t currentTime;
+    currentTime = time(NULL);
+
+    // Find and assign the parent to the new inode
+    inode = getFreeInode();
+    getParentPath(parentPath, path);
+    parentNode = getInode(parentPath);
+
+    // Set inode info
+    inode->type = type;
+    strcpy(inode->name , requestFilePathArray[requestFilePathArraySize - 1]);
+    sprintf(inode->path, "%s/%s", parentPath, inode->name);
+    inode->lastAccessTime = currentTime;
+    inode->lastModificationTime = currentTime;
+
+    // Set the inode's parent
+    if (!setParent(parentNode, inode)) 
+    {
+        freeInode(inode);
+        printf("Failed to set parent.\n");
+        return NULL;
+    }
+
+    printf("Sucessfully created inode for path '%s'.\n", path);       
+    return inode;
+}
+
 fs_dir* inodes;
 void fs_init() 
 {
@@ -156,8 +190,10 @@ void fs_init()
     inodes = calloc(getVCB()->totalInodeBlocks, getVCB()->blockSize);
     printf("Inodes allocated at %p.\n", inodes);
     printf("InodeStartBlock: %ld\n", getVCB()->inodeStartBlock);
+
+    printf("INODE: %s | %s\n", inodes->name, inodes->path);
     uint64_t blocksRead = LBAread(inodes, getVCB()->totalInodeBlocks, getVCB()->inodeStartBlock);
-    printf("INODE: %s [|] %s\n", inodes->name, inodes->path);
+    printf("INODE: %s | %s\n", inodes->name, inodes->path);
     printf("%ld inode blocks were read.\n", blocksRead);
 
     // Return failed if not enough blocks read

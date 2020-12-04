@@ -38,7 +38,7 @@ void initialize(uint64_t _volumeSize, uint64_t _blockSize)
     blockSize = _blockSize;
     diskSizeBlocks = divUp(volumeSize, blockSize);
     freeMapSize = diskSizeBlocks <= sizeof(uint32_t) * 8 ? 1 : diskSizeBlocks / sizeof(uint32_t) / 8;
-    vcbTotal = divUp(sizeof(fs_VCB) + sizeof(uint32_t[freeMapSize]), blockSize); // uint64?
+    vcbTotal = divUp(sizeof(fs_VCB) + sizeof(uint32_t[freeMapSize]), blockSize);
     inodeStartBlock = VCB_START_BLOCK + vcbTotal;
     inodeTotal = (diskSizeBlocks - inodeStartBlock) / (DATA_BLOCKS_PER_INODE + divUp(sizeof(fs_dir), blockSize));
     inodeBlockTotal = divUp(inodeTotal * sizeof(fs_dir), blockSize);
@@ -82,7 +82,8 @@ void initializeVCB()
     openVCB->inodeStartBlock = inodeStartBlock;
     openVCB->totalInodes = inodeTotal;
     openVCB->totalInodeBlocks = inodeBlockTotal;
-    printf("initVCB: totalInodeBlocks %ld", openVCB->totalInodeBlocks);
+    printf("initVCB: totalInodeBlocks %ld\n", openVCB->totalInodeBlocks);
+    printf("initVCB: inodeStartBlock %ld\n", openVCB->inodeStartBlock);
 
     // Set block free space map to available
     openVCB->freeMapSize = freeMapSize;
@@ -182,6 +183,7 @@ uint64_t writeVCB()
     }
 
     uint64_t blocksWritten = LBAwrite(openVCB, vcbTotal, VCB_START_BLOCK);
+    printf("writeVCB: %ld\n", blocksWritten);
     printf("Wrote VCB in %d blocks starting at block %d.\n", vcbTotal, VCB_START_BLOCK);
     return blocksWritten;
 }

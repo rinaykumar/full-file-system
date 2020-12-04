@@ -13,7 +13,7 @@
 #include "bitMap.h"
 
 char * getInodeTypeName(char* buf, InodeType type);
-fs_dir* createInode(InodeType type, const char* path);
+// fs_dir* createInode(InodeType type, const char* path);
 fs_dir* getInode(const char *pathname);
 fs_dir* getFreeInode();
 fs_dir* getInodeByIndex(int index);

@@ -23,6 +23,7 @@ char* getInodeTypeName(char* buf, InodeType type)
     return buf;
 }
 
+/*
 fs_dir* createInode(InodeType type, const char* path)
 {
     fs_dir * inode;
@@ -40,7 +41,7 @@ fs_dir* createInode(InodeType type, const char* path)
 
     // Set inode info
     inode->type = type;
-    // strcpy(inode->name , requestedFilePathArray[requestedFilePathArraySize - 1]);
+    strcpy(inode->name , requestFilePathArray[requestFilePathArraySize - 1]);
     sprintf(inode->path, "%s/%s", parentPath, inode->name);
     inode->lastAccessTime = currentTime;
     inode->lastModificationTime = currentTime;
@@ -56,6 +57,7 @@ fs_dir* createInode(InodeType type, const char* path)
     printf("Sucessfully created inode for path '%s'.\n", path);       
     return inode;
 }
+*/
 
 // Get inode with specified pathname
 fs_dir* getInode(const char *pathname)
