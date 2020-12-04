@@ -51,8 +51,8 @@ OBJ = $(ROOTNAME)$(HW)$(FOPTION).o $(ADDOBJ)
 %.o: %.c $(DEPS)
 	$(CC) -c -o $@ $< $(CFLAGS) 
 
-#$(ROOTNAME)$(HW)$(FOPTION): $(ADDOBJ)
-	#$(CC) -o $@ $^ $(CFLAGS) -lm -l readline -l $(LIBS)
+$(ROOTNAME)$(HW)$(FOPTION): $(ADDOBJ)
+	$(CC) -o $@ $^ $(CFLAGS) -lm -l readline -l $(LIBS)
 
 fsVolume: fsVolume.o $(ADDOBJ)
 	$(CC) -o $@ $^ $(CFLAGS) -lm -l $(LIBS)
@@ -63,10 +63,6 @@ fsInit: fsInit.o $(ADDOBJ)
 clean:
 	rm *.o fsVolume fsInit
 	rm *.o $(ROOTNAME)$(HW)$(FOPTION) 
-
-format:
-	make fsVolume
-	./fsVolume $(VOLUMENAME) $(VOLUMESIZE) $(BLOCKSIZE)
 
 init:
 	make fsVolume
