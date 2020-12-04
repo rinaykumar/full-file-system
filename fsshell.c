@@ -162,7 +162,7 @@ int displayFiles (fs_dir * dirp, int flall, int fllong)
 	{
 	if (dirp == NULL)	//get out if error
 		return (-1);
-
+		
 	struct fs_dirEntry * di;
 	struct fs_stat statbuf;
 	
