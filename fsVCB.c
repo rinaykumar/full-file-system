@@ -149,7 +149,7 @@ void initializeInodes()
     // Write inode changes to disk
     char* char_p = (char*) inodes;
     uint64_t blocksWritten = LBAwrite(char_p, inodeBlockTotal, inodeStartBlock);
-    printf("BLOCKS WRITTEN: %ld\n", blocksWritten);
+    printf("Wrote inodes to %ld blocks.\n", blocksWritten);
     printf("Wrote %d inodes of size %ld bytes each starting at block %d.\n", inodeTotal, sizeof(fs_dir), inodeStartBlock);
     free(inodes);
 }
