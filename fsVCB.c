@@ -28,7 +28,7 @@ uint32_t inodeTotal;
 uint32_t inodeBlockTotal;
 uint32_t freeMapSize;
 
-int initialized2 = 0;
+int volumeInitialized = 0;
 fs_VCB* openVCB;
 
 // Initializes the info for the volume control block and allocates to memory
@@ -47,7 +47,7 @@ void initialize(uint64_t _volumeSize, uint64_t _blockSize)
     int vcbSize = allocateVCB(&openVCB);
     printf("Allocated %d blocks for VCB.\n", vcbSize);
 
-    initialized2 = 1;
+    volumeInitialized = 1;
 }
 
 // Rounded up division of integers
@@ -65,7 +65,7 @@ int allocateVCB(fs_VCB** vcb)
 
 void initializeVCB() 
 {
-    if (!initialized2) 
+    if (!volumeInitialized) 
     {
         printf("VCB system not initialized.\n");
         return;
@@ -103,7 +103,7 @@ void initializeVCB()
 
 void initializeInodes() 
 {
-    if (!initialized2) 
+    if (!volumeInitialized) 
     {
         printf("initializeInodes: System not initialized.\n");
         return;
@@ -161,7 +161,7 @@ fs_VCB* getVCB()
 // Reads the VCB from the disk
 uint64_t readVCB()
 {
-    if (!initialized2) 
+    if (!volumeInitialized) 
     {
         printf("readVCB: VCB system not initialized.\n");
         return 0;
@@ -175,7 +175,7 @@ uint64_t readVCB()
 // Write all changes on VCB to the disk
 uint64_t writeVCB() 
 {
-    if (!initialized2) 
+    if (!volumeInitialized) 
     {
         printf("writeVCB: VCB system not initialized.\n");
         return 0;
@@ -254,17 +254,21 @@ int createVolume(char* volumeName, uint64_t volumeSize, uint64_t blockSize)
     if (retVal == 0) 
     {
         initialize(volumeSize, blockSize);
+        printf("Done initialization\n");
         initializeVCB();
+        printf("Done initialization of VCB\n");
         initializeInodes();
+        printf("Done initialization of Inodes\n");
     }
 
     closeVolume();
+    printf("Close volume\n");
     return retVal;
 }
 
 void openVolume(char* volumeName) 
 {
-    if (!initialized2) 
+    if (!volumeInitialized) 
     {
         uint64_t existingVolumeSize;
         uint64_t existingBlockSize;
@@ -285,11 +289,11 @@ void openVolume(char* volumeName)
 
 void closeVolume() 
 {
-    if (initialized2) 
+    if (volumeInitialized) 
     {
         closePartitionSystem();
         free(openVCB);
-        initialized2 = 0;
+        volumeInitialized = 0;
     } 
     else 
     {

@@ -157,6 +157,7 @@ void fs_init()
     printf("Inodes allocated at %p.\n", inodes);
     printf("InodeStartBlock: %ld\n", getVCB()->inodeStartBlock);
     uint64_t blocksRead = LBAread(inodes, getVCB()->totalInodeBlocks, getVCB()->inodeStartBlock);
+    printf("INODE: %s [|] %s\n", inodes->name, inodes->path);
     printf("%ld inode blocks were read.\n", blocksRead);
 
     // Return failed if not enough blocks read
