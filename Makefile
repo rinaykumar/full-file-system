@@ -51,7 +51,7 @@ OBJ = $(ROOTNAME)$(HW)$(FOPTION).o $(ADDOBJ)
 %.o: %.c $(DEPS)
 	$(CC) -c -o $@ $< $(CFLAGS) 
 
-$(ROOTNAME)$(HW)$(FOPTION): $(ADDOBJ)
+$(ROOTNAME)$(HW)$(FOPTION): $(OBJ)
 	$(CC) -o $@ $^ $(CFLAGS) -lm -l readline -l $(LIBS)
 
 fsVolume: fsVolume.o $(ADDOBJ)
@@ -76,4 +76,5 @@ erase:
 	rm $(VOLUMENAME)
 
 run: $(ROOTNAME)$(HW)$(FOPTION)
+	#make $(ROOTNAME)$(HW)$(FOPTION)
 	./$(ROOTNAME)$(HW)$(FOPTION) $(RUNOPTIONS)
