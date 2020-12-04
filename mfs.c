@@ -155,7 +155,7 @@ void fs_init()
     printf("totalInodeBlocks %ld, blockSize %ld\n", getVCB()->totalInodeBlocks, getVCB()->blockSize);
     inodes = calloc(getVCB()->totalInodeBlocks, getVCB()->blockSize);
     printf("Inodes allocated at %p.\n", inodes);
-
+    printf("InodeStartBlock: %d\n", getVCB()->inodeStartBlock);
     uint64_t blocksRead = LBAread(inodes, getVCB()->totalInodeBlocks, getVCB()->inodeStartBlock);
     printf("%ld inode blocks were read.\n", blocksRead);
 
@@ -283,6 +283,7 @@ char* fs_getcwd(char *buf, size_t size)
     }
 
     strcpy(buf, cwdPath);
+    printf("fs_getcwd: buf = %s\n", buf);
     return buf;
 }
 

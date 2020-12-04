@@ -62,12 +62,14 @@ int b_getFCB() {
 
 //opens the file with flags and returns fd
 int b_open(char * filename, int flags) {
+    printf("ahhh1\n");
     //initialize fcbArray if not
     if(initialized == 0) {
         b_init();
     }
 
     //find directory entry
+    /*
     char* filepath;
     if(filename[0] != '/') {
         char* cwd;
@@ -77,18 +79,21 @@ int b_open(char * filename, int flags) {
     } else {
         filepath = filename;
     }
-
-    fs_dir* directoryEntry = getInode(filepath);
-
+    */
+   
+    printf("ahhh2\n");
+    fs_dir* directoryEntry = getInode(filename);
+    printf("ahhh3\n");
     //if directory entry does not exist, create one and initialize if create flag is set
     if(directoryEntry == NULL) {
         if(flags & O_CREAT) {
-            directoryEntry = createInode(I_FILE, filepath);
+            directoryEntry = createInode(I_FILE, filename);
             directoryEntry->sizeInBytes = 0;
         } else {
             return -1;
         }
     }
+    printf("ahhh4\n");
 
     //if flag has trancate, reinitialize the file size to 0
     if(flags & O_TRUNC) {

@@ -35,7 +35,7 @@ void initialize(uint64_t _volumeSize, uint64_t _blockSize)
     blockSize = _blockSize;
     diskSizeBlocks = divUp(volumeSize, blockSize);
     freeMapSize = diskSizeBlocks <= sizeof(uint32_t) * 8 ? 1 : diskSizeBlocks / sizeof(uint32_t) / 8;
-    vcbTotal = divUp(sizeof(fs_VCB) + sizeof(uint64_t[freeMapSize]), blockSize);
+    vcbTotal = divUp(sizeof(fs_VCB) + sizeof(uint32_t[freeMapSize]), blockSize); // uint64?
     inodeStartBlock = VCB_START_BLOCK + vcbTotal;
     inodeTotal = (diskSizeBlocks - inodeStartBlock) / (DATA_BLOCKS_PER_INODE + divUp(sizeof(fs_dir), blockSize));
     inodeBlockTotal = divUp(inodeTotal * sizeof(fs_dir), blockSize);

@@ -288,8 +288,11 @@ int cmd_ls (int argcnt, char *argvec[])
 	else   // no pathname/filename specified - use cwd
 		{
 		char * path = fs_getcwd(cwd, DIRMAX_LEN);	//get current working directory
+		printf("shell: path = fs_getcwd\n");
+		printf("shell: path = %s\n", path);
 		fs_dir * dirp;
 		dirp = fs_opendir (path);
+		printf("shell: dirp = fs_opendir\n");
 		return (displayFiles (dirp, flall, fllong));
 		}
 	return 0;

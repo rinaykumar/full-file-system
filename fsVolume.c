@@ -35,7 +35,7 @@ int main (int argc, char* argv[])
     int createVolumeCode = createVolume(volumeName, volumeSize, blockSize);
     if (createVolumeCode < 0)
     {
-        printf("Call for createVolume function failed.");
+        printf("Call for createVolume function failed.\n");
         return 0;
     }
 
