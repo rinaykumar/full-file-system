@@ -177,7 +177,6 @@ fs_dir* createInode(InodeType type, const char* path)
         printf("Failed to set parent.\n");
         return NULL;
     }
-    printf("createInode PNAME: %s\n", inode->parent);
 
     printf("Sucessfully created inode for path '%s'.\n", path);       
     return inode;
@@ -366,7 +365,6 @@ char* fs_getcwd(char *buf, size_t size)
     }
 
     strcpy(buf, cwdPath);
-    printf("fs_getcwd: buf = %s\n", buf);
     return buf;
 }
 
@@ -400,6 +398,13 @@ int fs_setcwd(char *buf)
         return 1;
     }
 
+    // Check if path is a file
+    if (inode->type != I_DIR) 
+    {
+        printf("Path not a directory. (%s)\n", fullPath);
+        return 1;
+    }
+
     // Clear old path; '\0' is a null terminator
     cwdPath[0] = '\0';
     cwdPathArraySize = 0;
@@ -419,8 +424,20 @@ int fs_setcwd(char *buf)
 // Return 1 if file, 0 otherwise
 int fs_isFile(char * path)
 {
+    // Parse the path into a tokenized array of path levels
+    parseFilePath(path);
+
+    // Piece together the full file path
+    char fullPath[MAX_FILEPATH_SIZE] = "";
+    for (int i = 0; i < requestFilePathArraySize; i++) 
+    {
+        // Add a separator between each path level
+        strcat(fullPath, "/");
+        strcat(fullPath, requestFilePathArray[i]);
+    }
+
     // Get the inode from path
-    fs_dir* inode = getInode(path);
+    fs_dir* inode = getInode(fullPath);
 
     // Check inode type
     if (inode->type == I_FILE) {
@@ -434,8 +451,20 @@ int fs_isFile(char * path)
 // Return 1 if directory, 0 otherwise
 int fs_isDir(char * path) 
 {
+    // Parse the path into a tokenized array of path levels
+    parseFilePath(path);
+
+    // Piece together the full file path
+    char fullPath[MAX_FILEPATH_SIZE] = "";
+    for (int i = 0; i < requestFilePathArraySize; i++) 
+    {
+        // Add a separator between each path level
+        strcat(fullPath, "/");
+        strcat(fullPath, requestFilePathArray[i]);
+    }
+
     // Get the inode from path
-    fs_dir* inode = getInode(path);
+    fs_dir* inode = getInode(fullPath);
 
     // Check inode type
     if (inode->type == I_DIR) {
@@ -463,7 +492,7 @@ int fs_delete(char* filename)
     // }
 
     // Second way:
-
+    
     // Get inode
     fs_dir* inode = getInode(filename);
     fs_dir* parentInode = getInode(inode->parent);
