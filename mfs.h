@@ -106,13 +106,8 @@ struct fs_stat
 	time_t    st_createtime;   	/* time of last status change */
 	
 	/* add additional attributes here for your file system */
-	dev_t     st_dev;     /* ID of device containing file */
 	ino_t     st_ino;     /* inode index number */
 	mode_t    st_mode;    /* protection mode */
-	nlink_t   st_nlink;   /* number of hard links */
-	uid_t     st_uid;     /* owner's user ID */
-	gid_t     st_gid;     /* owner's group ID */
-	dev_t     st_rdev;    /* device ID (if special file) */
 	};
 
 int fs_stat(const char *path, struct fs_stat *buf);
