@@ -66,6 +66,7 @@ int b_open(char * filename, int flags) {
     if(initialized == 0) {
         b_init();
     }
+
     fs_dir* inode = getInode(filename);
     
     //if directory entry does not exist, create one and initialize if create flag is set

@@ -167,6 +167,7 @@ int displayFiles (fs_dir * dirp, int flall, int fllong)
 	struct fs_stat statbuf;
 	
 	di = fs_readdir (dirp);
+	// printf("di: %s\n", di->d_name);
 	printf("\n");
 	while (di != NULL) 
 		{
@@ -464,7 +465,7 @@ int cmd_rm (int argcnt, char *argvec[])
 	//must determine if file or directory
 	if (fs_isDir (path))
 		{
-		return (fs_rmdir (path));
+		return (fs_rmdir(path));
 		}		
 	if (fs_isFile (path))
 		{

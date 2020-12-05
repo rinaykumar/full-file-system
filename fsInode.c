@@ -59,20 +59,19 @@ fs_dir* createInode(InodeType type, const char* path)
 }
 */
 
-// Get inode with specified pathname
+// Get inode with specified path
 fs_dir* getInode(const char *path)
 {
     printf("Searching for path: '%s'\n", path);
     for (int i = 0; i < getVCB()->totalInodes; i++) 
     {
-        printf("\tInode path: '%s'\n", inodes[i].path);
         if (strcmp(inodes[i].path, path) == 0) 
         {
-            printf("Inode found!\n");
+            printf("Inode found! (%s)\n", path);
             return &inodes[i];
         }
     }
-    printf("Return NULL\n");
+    printf("Failed to find inode. (%s)\n", path);
     return NULL;
 }
 
