@@ -60,6 +60,7 @@ typedef struct
 	char path[MAX_FILEPATH_SIZE];  // File path
 
 	int inUse;
+	int fd;
 	uint64_t inodeIndex;
 	InodeType type;
 
@@ -78,7 +79,7 @@ typedef struct
 
 int fs_mkdir(const char *pathname, mode_t mode);
 int fs_rmdir(const char *pathname);
-fs_dir* fs_opendir(const char *name);
+fs_dir* fs_opendir(char *name);
 struct fs_dirEntry *fs_readdir(fs_dir *dirp);
 int fs_closedir(fs_dir *dirp);
 

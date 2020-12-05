@@ -66,6 +66,7 @@ void parseFilePath(const char *pathname)
         {
             depth = cwdPathArraySize;
         }
+        
 
         for (int i = 0; i < depth; i++)
         {
@@ -77,15 +78,18 @@ void parseFilePath(const char *pathname)
     // Skip token if relative path
     if (isParentRelative == 1 || isSelfRelative == 1)
     {
+        printf("Path is relative\n");
         currentToken = strtok_r(0, "/", &pathSavePtr);
     }
 
     // Set the request file path to the pathname
     while (currentToken && requestFilePathArraySize < MAX_DIRECTORY_DEPTH)
     {
+        printf("currentToken: %s\n", currentToken);
         strcpy(requestFilePathArray[requestFilePathArraySize], currentToken);
         requestFilePathArraySize++;
         currentToken = strtok_r(0, "/", &pathSavePtr);
+        printf("rfp: %s\n", requestFilePath);
     }
 }
 
@@ -274,14 +278,17 @@ int fs_rmdir(const char *pathname)
     return 0;
 }
 
-fs_dir* fs_opendir(const char *name) 
+fs_dir* fs_opendir(char *name) 
 {
     int openCode = b_open(name, 0);
     if (openCode < 0)
     {
+        printf("Open failed\n");
         return NULL;
     }
+    printf("Open successful\n");
     fs_dir* inode = getInode(name);
+    inode->fd = openCode;
     return inode;
 }
 
@@ -314,8 +321,9 @@ struct fs_dirEntry *fs_readdir(fs_dir *dirp)
 
 int fs_closedir(fs_dir *dirp)
 {   
-    // Not sure what is supposed to be done here
-    freeInode(dirp);
+    int fd = dirp->fd;
+    b_close(fd);
+    return 0;
 }
 
 char* fs_getcwd(char *buf, size_t size) 
@@ -340,7 +348,7 @@ int fs_setcwd(char *buf)
 
     // Check if inode exists
     fs_dir* inode = getInode(requestFilePath);
-    if (inode == NULL) 
+    if (!inode) 
     {
         printf("Directory '%s' does not exist.\n", requestFilePath);
         return 1;
