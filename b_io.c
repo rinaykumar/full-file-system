@@ -66,26 +66,22 @@ int b_open(char * filename, int flags) {
     if(initialized == 0) {
         b_init();
     }
-
-    //find directory entry
-    /*
-    char* filepath;
-    if(filename[0] != '/') {
-        char* cwd;
-        getcwd(cwd, MAX_FILEPATH_SIZE);
-        strcat(cwd, filename);
-        filepath = cwd;
-    } else {
-        filepath = filename;
-    }
-    */
    
-    fs_dir* directoryEntry = getInode(filename);
+    fs_dir* inode = getInode(filename);
     //if directory entry does not exist, create one and initialize if create flag is set
-    if(directoryEntry == NULL) {
+    if(inode == NULL) {
         if(flags & O_CREAT) {
-            directoryEntry = createInode(I_FILE, filename);
-            directoryEntry->sizeInBytes = 0;
+            inode = createInode(I_FILE, filename);
+
+            // Add the parent to the inode
+            char parentPath[MAX_FILENAME_SIZE];
+			getParentPath(parentPath, filename);
+			fs_dir* parentInode = getInode(parentInode);
+			setParent(parentInode, inode);
+            
+            // Write changes to disk
+			writeInodes();
+            inode->sizeInBytes = 0;
         } else {
             return -1;
         }
@@ -93,9 +89,9 @@ int b_open(char * filename, int flags) {
 
     //if flag has trancate, reinitialize the file size to 0
     if(flags & O_TRUNC) {
-        directoryEntry->sizeInBytes = 0;
-        directoryEntry->numDirectBlockPointers = 0;
-        directoryEntry->sizeInBlocks = 0;
+        inode->sizeInBytes = 0;
+        inode->numDirectBlockPointers = 0;
+        inode->sizeInBlocks = 0;
     }
 
     //find empty fcb index
@@ -106,7 +102,7 @@ int b_open(char * filename, int flags) {
     }
 
     //initialize and return index
-    fcbArray[index].file = directoryEntry;
+    fcbArray[index].file = inode;
     fcbArray[index].buf = malloc(BUFSIZE);
     fcbArray[index].block = 0;
     fcbArray[index].buflen = 0;
