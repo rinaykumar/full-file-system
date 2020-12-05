@@ -478,31 +478,43 @@ int fs_isDir(char * path)
 // Removes a file
 int fs_delete(char* filename) 
 {
-    // First way:
+    // Parse the path into a tokenized array of path levels
+    parseFilePath(filename);
 
-    // Get all inodes, store into allInodes
-    // allInodes = all inodes
-    // Loop through inodes and check for filename match in children
-    // for (int i = 0; i < allInodes->numChildren; i++) {
-    //     if (strcmp(filename, allInodes->children[i])) {
-    //         // Delete child/file 
+    // Piece together the full file path
+    char fullPath[MAX_FILEPATH_SIZE] = "";
+    for (int i = 0; i < requestFilePathArraySize; i++) 
+    {
+        // Add a separator between each path level
+        strcat(fullPath, "/");
+        strcat(fullPath, requestFilePathArray[i]);
+    }
 
-    //         return 1;
-    //     }
-    // }
+    // Check if inode exists
+    fs_dir* inodeToRemove = getInode(fullPath);
+    if (!inodeToRemove) 
+    {
+        printf("File '%s' does not exist.\n", fullPath);
+        return 1;
+    }
 
-    // Second way:
-    
-    // Get inode
-    fs_dir* inode = getInode(filename);
-    fs_dir* parentInode = getInode(inode->parent);
+    char parentPath[MAX_FILEPATH_SIZE];
+    getParentPath(parentPath, filename);
+    fs_dir* parentInode = getInode(parentPath);
+    if (!parentInode) 
+    {
+        printf("Directory '%s' does not exist.\n", fullPath);
+        return 1;
+    }
 
-    // Remove indoe from parent
-    removeFromParent(parentInode, inode);
+    // Remove inode from parent
+    removeFromParent(parentInode, inodeToRemove); // Need to access inode's parent and pass into function
+
+    // Close the file from our b_io
+    b_close(inodeToRemove->fd);
 
     // Free inode
-    freeInode(inode);
-
+    freeInode(inodeToRemove);
     return 0;
 }	
 
