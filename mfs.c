@@ -177,6 +177,7 @@ fs_dir* createInode(InodeType type, const char* path)
         printf("Failed to set parent.\n");
         return NULL;
     }
+    printf("createInode PNAME: %s\n", inode->parent);
 
     printf("Sucessfully created inode for path '%s'.\n", path);       
     return inode;
@@ -214,7 +215,7 @@ int fs_mkdir(const char *pathname, mode_t mode)
     // Parse the path into a tokenized array of path levels
     parseFilePath(pathname);
 
-    // Combine tokens into a single char string
+    // Combine tokens into a single char string; gets the parent of the called level
     char parentPath[256] = "";
     for (int i = 0; i < requestFilePathArraySize - 1; i++)
     {
@@ -231,9 +232,9 @@ int fs_mkdir(const char *pathname, mode_t mode)
         {
             // Compare current child's name to the request file path level
             int dirExists = strcmp(parentDir->children[i], requestFilePathArray[requestFilePathArraySize - 1]);
-            if (dirExists)
+            if (dirExists == 0)
             {
-                printf("mkdir: Directory already exists.");
+                printf("mkdir: Directory %s already exists.\n", parentDir->children[i]);
                 return -1;
             }
         }
@@ -322,7 +323,7 @@ fs_dir* fs_opendir(char *pathname)
 }
 
 struct fs_dirEntry dirEntry;
-int childIndex;
+int childIndex = 0;
 struct fs_dirEntry *fs_readdir(fs_dir *dirp) 
 {
     // Check if index is at the end
@@ -337,7 +338,7 @@ struct fs_dirEntry *fs_readdir(fs_dir *dirp)
     fs_dir* inode = getInode(dirp->path);
 
     // Set inode properties to directory entry
-    strcpy(dirEntry.d_name, inode->name);
+    strcpy(dirEntry.d_name, inode->children[childIndex]);
     dirEntry.d_ino = inode->inodeIndex;
     dirEntry.fileType = inode->type;
 
