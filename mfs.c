@@ -82,7 +82,6 @@ void parseFilePath(const char *pathname)
     // Set the request file path to the pathname
     while (currentToken && requestFilePathArraySize < MAX_DIRECTORY_DEPTH)
     {
-        printf("currentToken: %s\n", currentToken);
         strcpy(requestFilePathArray[requestFilePathArraySize], currentToken);
         requestFilePathArraySize++;
         currentToken = strtok_r(0, "/", &pathSavePtr);
@@ -105,7 +104,7 @@ char* getParentPath(char* buf, const char* path)
     }
 
     strcpy(buf, parentPath);
-    printf("Input: %s, Parent Path: %s\n", path, buf);
+    // printf("Input: %s, Parent Path: %s\n", path, buf);
     return buf;
 }
 
@@ -259,31 +258,65 @@ int fs_mkdir(const char *pathname, mode_t mode)
 
 int fs_rmdir(const char *pathname)
 {
-    // Assuming inodes are used as directories
+    // Parse the path into a tokenized array of path levels
+    parseFilePath(pathname);
 
-    // Get the inode
-    fs_dir* inodeToRemove = getInode(pathname);
-    fs_dir* parentInode = getInode(inodeToRemove->parent);
+    // Piece together the full file path
+    char fullPath[MAX_FILEPATH_SIZE] = "";
+    for (int i = 0; i < requestFilePathArraySize; i++) 
+    {
+        // Add a separator between each path level
+        strcat(fullPath, "/");
+        strcat(fullPath, requestFilePathArray[i]);
+    }
+
+    // Check if inode exists
+    fs_dir* inodeToRemove = getInode(fullPath);
+    if (!inodeToRemove) 
+    {
+        printf("Directory '%s' does not exist.\n", fullPath);
+        return 1;
+    }
+
+    char parentPath[MAX_FILEPATH_SIZE];
+    getParentPath(parentPath, pathname);
+    fs_dir* parentInode = getInode(parentPath);
+    if (!parentInode) 
+    {
+        printf("Directory '%s' does not exist.\n", fullPath);
+        return 1;
+    }
 
     // Remove inode from parent
     removeFromParent(parentInode, inodeToRemove); // Need to access inode's parent and pass into function
 
     // Free inode
     freeInode(inodeToRemove);
-
     return 0;
 }
 
-fs_dir* fs_opendir(char *name) 
+fs_dir* fs_opendir(char *pathname) 
 {
-    int openCode = b_open(name, 0);
+    int openCode = b_open(pathname, 0);
     if (openCode < 0)
     {
         printf("Open failed\n");
         return NULL;
     }
-    printf("Open successful\n");
-    fs_dir* inode = getInode(name);
+
+    // Parse the path into a tokenized array of path levels
+    parseFilePath(pathname);
+
+    // Piece together the full file path
+    char fullPath[MAX_FILEPATH_SIZE] = "";
+    for (int i = 0; i < requestFilePathArraySize; i++) 
+    {
+        // Add a separator between each path level
+        strcat(fullPath, "/");
+        strcat(fullPath, requestFilePathArray[i]);
+    }
+
+    fs_dir* inode = getInode(fullPath);
     inode->fd = openCode;
     return inode;
 }
@@ -350,7 +383,6 @@ int fs_setcwd(char *buf)
         strcat(fullPath, "/");
         strcat(fullPath, requestFilePathArray[i]);
     }
-    printf("fullPath: %s\n", fullPath);
 
     // Check if inode exists
     fs_dir* inode = getInode(fullPath);
@@ -440,7 +472,7 @@ int fs_delete(char* filename)
 int fs_stat(const char *path, struct fs_stat *buf) 
 {
     // get inode for path
-    fs_dir* inode = getInode(path);     // Should path be parsed first?
+    fs_dir* inode = getInode(path);
 
     // if inode exists
     if (inode) {
