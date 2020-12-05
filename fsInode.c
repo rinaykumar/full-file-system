@@ -60,14 +60,13 @@ fs_dir* createInode(InodeType type, const char* path)
 */
 
 // Get inode with specified pathname
-fs_dir* getInode(const char *pathname)
+fs_dir* getInode(const char *path)
 {
-    printf("Searching for path: '%s'\n", pathname);
-    printf("totalInodes: %ld\n", getVCB()->totalInodes);
+    printf("Searching for path: '%s'\n", path);
     for (int i = 0; i < getVCB()->totalInodes; i++) 
     {
         printf("\tInode path: '%s'\n", inodes[i].path);
-        if (strcmp(inodes[i].path, pathname) == 0) 
+        if (strcmp(inodes[i].path, path) == 0) 
         {
             printf("Inode found!\n");
             return &inodes[i];
@@ -88,7 +87,6 @@ fs_dir* getFreeInode()
         {
             inodes[i].inUse = 1;
             freeInode = &inodes[i];
-            printf("Free inode found.\n");
             return freeInode;
         }
     }
@@ -172,7 +170,6 @@ int writeBufferToInode(fs_dir * inode, char* buffer, size_t bufSizeBytes, uint64
 
 void freeInode(fs_dir * inode)
 {
-    printf("Freeing inode: '%s'\n", inode->path);
     inode->inUse = 0;
     inode->type = I_UNUSED;
     strcpy(inode->name, "\0");

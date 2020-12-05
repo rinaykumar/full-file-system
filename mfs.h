@@ -79,7 +79,7 @@ typedef struct
 
 int fs_mkdir(const char *pathname, mode_t mode);
 int fs_rmdir(const char *pathname);
-fs_dir* fs_opendir(char *name);
+fs_dir* fs_opendir(char *pathname);
 struct fs_dirEntry *fs_readdir(fs_dir *dirp);
 int fs_closedir(fs_dir *dirp);
 
