@@ -75,14 +75,17 @@ int b_open(char * filename, int flags) {
         if(flags & O_CREAT) {
             inode = createInode(I_FILE, filename);
 
+            /*
             // Add the parent to the inode
             char parentPath[MAX_FILENAME_SIZE];
 			getParentPath(parentPath, filename);
 			fs_dir* parentInode = getInode(parentInode);
 			setParent(parentInode, inode);
+            */
+            
             
             // Write changes to disk
-			writeInodes();
+			// writeInodes();
             inode->sizeInBytes = 0;
         } else {
             return -1;
