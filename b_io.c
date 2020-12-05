@@ -66,11 +66,15 @@ int b_open(char * filename, int flags) {
     if(initialized == 0) {
         b_init();
     }
-   
+    printf("00\n");
     fs_dir* inode = getInode(filename);
+    
     //if directory entry does not exist, create one and initialize if create flag is set
     if(inode == NULL) {
+        printf("AHAAHAHAH\n");
+        // printf("inodeName: %s | inUse: %d\n", inode->name, inode->inUse);
         if(flags & O_CREAT) {
+            printf("0\n");
             inode = createInode(I_FILE, filename);
 
             // Add the parent to the inode
@@ -108,6 +112,7 @@ int b_open(char * filename, int flags) {
     fcbArray[index].buflen = 0;
     fcbArray[index].flag = flags;
     fcbArray[index].offset = 0;
+    printf("6\n");
 
     return index;
 }
