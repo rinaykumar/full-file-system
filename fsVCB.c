@@ -82,11 +82,11 @@ void initializeVCB()
     openVCB->inodeStartBlock = inodeStartBlock;
     openVCB->totalInodes = inodeTotal;
     openVCB->totalInodeBlocks = inodeBlockTotal;
+    openVCB->freeMapSize = freeMapSize;
     printf("initVCB: totalInodeBlocks %ld\n", openVCB->totalInodeBlocks);
     printf("initVCB: inodeStartBlock %ld\n", openVCB->inodeStartBlock);
 
     // Set block free space map to available
-    openVCB->freeMapSize = freeMapSize;
     for (int i = 0; i < freeMapSize; i++) 
     {
         openVCB->freeMap[i] = 0;
@@ -118,6 +118,7 @@ void initializeInodes()
     strcpy(inodes[0].path, "/root");
 
     inodes[0].inUse = 1;
+    inodes[0].fd = -1;
     inodes[0].inodeIndex = 0;
     inodes[0].type = I_DIR;
 
@@ -132,6 +133,7 @@ void initializeInodes()
         strcpy(inodes[i].name, "");
 
         inodes[i].inUse = 0;
+        inodes[0].fd = -1;
         inodes[i].inodeIndex = i;
         inodes[i].type = I_UNUSED;
         
@@ -235,7 +237,7 @@ void printVCB()
     printf("Printed VCB Size: %d bytes\n", size);
 }
 
-int createVolume(char* volumeName, uint64_t volumeSize, uint64_t blockSize) 
+int createVolume(char* volumeName, uint64_t _volumeSize, uint64_t _blockSize) 
 {
     // Check if volume already exists
     if (access(volumeName, F_OK) != -1) 
@@ -244,8 +246,8 @@ int createVolume(char* volumeName, uint64_t volumeSize, uint64_t blockSize)
         return -1;
     }
 
-    uint64_t existingVolumeSize = volumeSize;
-    uint64_t existingBlockSize = blockSize;
+    uint64_t existingVolumeSize = _volumeSize;
+    uint64_t existingBlockSize = _blockSize;
 
     // Initialize the volume on disk
     int retVal = startPartitionSystem(volumeName, &existingVolumeSize, &existingBlockSize);
@@ -255,7 +257,7 @@ int createVolume(char* volumeName, uint64_t volumeSize, uint64_t blockSize)
     // Initalize the volume control block
     if (retVal == 0) 
     {
-        initialize(volumeSize, blockSize);
+        initialize(_volumeSize, _blockSize);
         printf("Done initialization\n");
         initializeVCB();
         printf("Done initialization of VCB\n");
