@@ -392,6 +392,13 @@ int fs_setcwd(char *buf)
         return 1;
     }
 
+    // Check if already in root directory
+    if (strcmp(buf, "..") == 0 && strcmp(cwdPath, "/root") == 0) 
+    {
+        printf("Already in root directory.\n");
+        return 1;
+    }
+
     // Clear old path; '\0' is a null terminator
     cwdPath[0] = '\0';
     cwdPathArraySize = 0;
