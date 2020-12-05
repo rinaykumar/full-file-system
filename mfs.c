@@ -342,7 +342,7 @@ int fs_setcwd(char *buf)
     // Parse the path into a tokenized array of path levels
     parseFilePath(buf);
 
-    // Loop till we reach the path level before the end
+    // Piece together the full file path
     char fullPath[MAX_FILEPATH_SIZE] = "";
     for (int i = 0; i < requestFilePathArraySize; i++) 
     {
