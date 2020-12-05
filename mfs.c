@@ -32,14 +32,11 @@ char cwdPathArray[MAX_DIRECTORY_DEPTH][MAX_FILENAME_SIZE];
 int cwdPathArraySize = 0;
 
 // After parsing a path, holds each 'level' of the requested file's path
-char requestFilePath[MAX_FILEPATH_SIZE];
 char requestFilePathArray[MAX_DIRECTORY_DEPTH][MAX_FILENAME_SIZE];
 int requestFilePathArraySize = 0;
 
 void parseFilePath(const char *pathname)
 {
-    // Set old path as empty (null terminator)
-    requestFilePath[0] = '\0';
     requestFilePathArraySize = 0;
 
     // Make a copy of path name for tokenization
@@ -89,7 +86,6 @@ void parseFilePath(const char *pathname)
         strcpy(requestFilePathArray[requestFilePathArraySize], currentToken);
         requestFilePathArraySize++;
         currentToken = strtok_r(0, "/", &pathSavePtr);
-        printf("rfp: %s\n", requestFilePath);
     }
 }
 
@@ -346,11 +342,21 @@ int fs_setcwd(char *buf)
     // Parse the path into a tokenized array of path levels
     parseFilePath(buf);
 
+    // Loop till we reach the path level before the end
+    char fullPath[MAX_FILEPATH_SIZE] = "";
+    for (int i = 0; i < requestFilePathArraySize; i++) 
+    {
+        // Add a separator between each path level
+        strcat(fullPath, "/");
+        strcat(fullPath, requestFilePathArray[i]);
+    }
+    printf("fullPath: %s\n", fullPath);
+
     // Check if inode exists
-    fs_dir* inode = getInode(requestFilePath);
+    fs_dir* inode = getInode(fullPath);
     if (!inode) 
     {
-        printf("Directory '%s' does not exist.\n", requestFilePath);
+        printf("Directory '%s' does not exist.\n", fullPath);
         return 1;
     }
 
