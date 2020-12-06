@@ -338,7 +338,7 @@ fs_dir* fs_opendir(char *pathname)
     if (pathIsAbsolute == 1 && strcmp(requestFilePathArray[0], "root") != 0)
     {
         printf("fs_opendir: /root is missing from absolute path name. (%s)\n", fullPath);
-        return -1;
+        return NULL;
     }
 
     fs_dir* inode = getInode(fullPath);
@@ -584,8 +584,27 @@ int fs_delete(char* filename)
 
 int fs_stat(const char *path, struct fs_stat *buf) 
 {
+    // Parse the path into a tokenized array of path levels
+    parseFilePath(path);
+
+    // Piece together the full file path
+    char fullPath[MAX_FILEPATH_SIZE] = "";
+    for (int i = 0; i < requestFilePathArraySize; i++) 
+    {
+        // Add a separator between each path level
+        strcat(fullPath, "/");
+        strcat(fullPath, requestFilePathArray[i]);
+    }
+
+    // If path is absolute, check to see if it has /root
+    if (pathIsAbsolute == 1 && strcmp(requestFilePathArray[0], "root") != 0)
+    {
+        printf("fs_stat: /root is missing from absolute path name. (%s)\n", fullPath);
+        return -1;
+    }
+
     // get inode for path
-    fs_dir* inode = getInode(path);
+    fs_dir* inode = getInode(fullPath);
 
     // if inode exists
     if (inode) {
