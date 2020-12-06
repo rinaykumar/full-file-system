@@ -34,7 +34,7 @@
 #
 
 VOLUMENAME = SampleVolume
-VOLUMESIZE = 30000
+VOLUMESIZE = 100000
 BLOCKSIZE = 512
 
 ROOTNAME=fsshell
@@ -67,7 +67,7 @@ clean:
 erase:
 	rm $(VOLUMENAME)
 
-format:
+volume:
 	make fsVolume
 	./fsVolume $(VOLUMENAME) $(VOLUMESIZE) $(BLOCKSIZE)
 
@@ -76,5 +76,4 @@ test:
 	./fsTest $(VOLUMENAME)
 
 run: $(ROOTNAME)$(HW)$(FOPTION)
-	#make $(ROOTNAME)$(HW)$(FOPTION)
 	./$(ROOTNAME)$(HW)$(FOPTION) $(RUNOPTIONS)
