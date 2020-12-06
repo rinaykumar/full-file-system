@@ -34,9 +34,11 @@ int cwdPathArraySize = 0;
 // After parsing a path, holds each 'level' of the requested file's path
 char requestFilePathArray[MAX_DIRECTORY_DEPTH][MAX_FILENAME_SIZE];
 int requestFilePathArraySize = 0;
+int pathIsAbsolute = 0;
 
 void parseFilePath(const char *pathname)
 {
+    pathIsAbsolute = 0;
     requestFilePathArraySize = 0;
 
     // Make a copy of path name for tokenization
@@ -49,6 +51,7 @@ void parseFilePath(const char *pathname)
 
     // Check for each type of path name
     int isAbsolute = pathname[0] == '/';
+    pathIsAbsolute = isAbsolute;
     int isParentRelative = !strcmp(currentToken, "..");
     int isSelfRelative = !strcmp(currentToken, ".");
 
@@ -224,6 +227,13 @@ int fs_mkdir(const char *pathname, mode_t mode)
         strcat(parentPath, requestFilePathArray[i]);
     }
 
+    // If path is absolute, check to see if it has /root
+    if (pathIsAbsolute == 1 && strcmp(requestFilePathArray[0], "root") != 0)
+    {
+        printf("fs_mkdir: /root is missing from absolute path name. (%s)\n", parentPath);
+        return -1;
+    }
+
     // Return failure if directory already exists or if parent does not exist
     fs_dir* parentDir = getInode(parentPath);
     if (parentDir)
@@ -271,6 +281,13 @@ int fs_rmdir(const char *pathname)
         strcat(fullPath, requestFilePathArray[i]);
     }
 
+    // If path is absolute, check to see if it has /root
+    if (pathIsAbsolute == 1 && strcmp(requestFilePathArray[0], "root") != 0)
+    {
+        printf("fs_rmdir: /root is missing from absolute path name. (%s)\n", fullPath);
+        return -1;
+    }
+
     // Check if inode exists
     fs_dir* inodeToRemove = getInode(fullPath);
     if (!inodeToRemove) 
@@ -315,6 +332,13 @@ fs_dir* fs_opendir(char *pathname)
         // Add a separator between each path level
         strcat(fullPath, "/");
         strcat(fullPath, requestFilePathArray[i]);
+    }
+
+    // If path is absolute, check to see if it has /root
+    if (pathIsAbsolute == 1 && strcmp(requestFilePathArray[0], "root") != 0)
+    {
+        printf("fs_opendir: /root is missing from absolute path name. (%s)\n", fullPath);
+        return -1;
     }
 
     fs_dir* inode = getInode(fullPath);
@@ -384,6 +408,13 @@ int fs_setcwd(char *buf)
         strcat(fullPath, requestFilePathArray[i]);
     }
 
+    // If path is absolute, check to see if it has /root
+    if (pathIsAbsolute == 1 && strcmp(requestFilePathArray[0], "root") != 0)
+    {
+        printf("fs_setcwd: /root is missing from absolute path name. (%s)\n", fullPath);
+        return -1;
+    }
+
     // Check if inode exists
     fs_dir* inode = getInode(fullPath);
     if (!inode) 
@@ -437,6 +468,13 @@ int fs_isFile(char * path)
         strcat(fullPath, requestFilePathArray[i]);
     }
 
+    // If path is absolute, check to see if it has /root
+    if (pathIsAbsolute == 1 && strcmp(requestFilePathArray[0], "root") != 0)
+    {
+        printf("fs_isFile: /root is missing from absolute path name. (%s)\n", fullPath);
+        return -1;
+    }
+
     // Get the inode from path
     fs_dir* inode = getInode(fullPath);
 
@@ -470,6 +508,13 @@ int fs_isDir(char * path)
         strcat(fullPath, requestFilePathArray[i]);
     }
 
+    // If path is absolute, check to see if it has /root
+    if (pathIsAbsolute == 1 && strcmp(requestFilePathArray[0], "root") != 0)
+    {
+        printf("fs_isDir: /root is missing from absolute path name. (%s)\n", fullPath);
+        return -1;
+    }
+
     // Get the inode from path
     fs_dir* inode = getInode(fullPath);
     if (!inode) 
@@ -500,6 +545,13 @@ int fs_delete(char* filename)
         // Add a separator between each path level
         strcat(fullPath, "/");
         strcat(fullPath, requestFilePathArray[i]);
+    }
+
+    // If path is absolute, check to see if it has /root
+    if (pathIsAbsolute == 1 && strcmp(requestFilePathArray[0], "root") != 0)
+    {
+        printf("fs_delete: /root is missing from absolute path name. (%s)\n", fullPath);
+        return -1;
     }
 
     // Check if inode exists
