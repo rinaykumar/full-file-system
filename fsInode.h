@@ -12,6 +12,8 @@
 #include "mfs.h"
 #include "bitMap.h"
 
+int initInodeArray();
+void closeInodeArray();
 fs_dir* createInode(InodeType type, const char* path);
 fs_dir* getInode(const char *pathname);
 fs_dir* getFreeInode();

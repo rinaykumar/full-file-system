@@ -16,6 +16,29 @@
 
 fs_dir* inodes;
 
+int initInodeArray()
+{
+    printf("totalInodeBlocks %ld, blockSize %ld\n", getVCB()->totalInodeBlocks, getVCB()->blockSize);
+    inodes = calloc(getVCB()->totalInodeBlocks, getVCB()->blockSize);
+    printf("Inodes allocated at %p.\n", inodes);
+
+    uint64_t blocksRead = LBAread(inodes, getVCB()->totalInodeBlocks, getVCB()->inodeStartBlock);
+    printf("%ld inode blocks were read.\n", blocksRead);
+
+    // Return failed if not enough blocks read
+    if (blocksRead != getVCB()->totalInodeBlocks)
+    {
+        printf("fs_init: Failed to read all inode blocks.\n");
+        return 0;
+    }
+    return 1;
+}
+
+void closeInodeArray()
+{
+    free(inodes);
+}
+
 fs_dir* createInode(InodeType type, const char* path)
 {
     fs_dir * inode;

@@ -92,11 +92,15 @@ int b_open(char * filename, int flags) {
             
             
             // Write changes to disk
-			// writeInodes();
+			// writeInodeArray();
             inode->sizeInBytes = 0;
-        } else {
+        } 
+        /*
+        else 
+        {
             return -1;
         }
+        */
     }
 
     //if flag has trancate, reinitialize the file size to 0

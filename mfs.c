@@ -26,9 +26,6 @@
 #include "fsVCB.h"
 #include "b_io.h"
 
-// Holds the inodes for the file system
-fs_dir* inodes;
-
 // Current working directory path
 char cwdPath[MAX_FILEPATH_SIZE];
 char cwdPathArray[MAX_DIRECTORY_DEPTH][MAX_FILENAME_SIZE];
@@ -162,28 +159,20 @@ int setParent(fs_dir* parent, fs_dir* child)
 
 void fs_init() 
 {
-    printf("totalInodeBlocks %ld, blockSize %ld\n", getVCB()->totalInodeBlocks, getVCB()->blockSize);
-    inodes = calloc(getVCB()->totalInodeBlocks, getVCB()->blockSize);
-    printf("Inodes allocated at %p.\n", inodes);
-
-    uint64_t blocksRead = LBAread(inodes, getVCB()->totalInodeBlocks, getVCB()->inodeStartBlock);
-    printf("%ld inode blocks were read.\n", blocksRead);
-
-    // Return failed if not enough blocks read
-    if (blocksRead != getVCB()->totalInodeBlocks)
+    int rc = initInodeArray();
+    if (rc == 0)
     {
-        printf("fs_init: Failed to read all inode blocks.\n");
         fs_close();
         exit(0);
     }
-
+    
     // Initialize the root directory
     fs_setcwd("/root");
 }
 
 void fs_close()
 {
-    free(inodes);
+    closeInodeArray();
 }
 
 int fs_mkdir(const char *pathname, mode_t mode)
@@ -232,7 +221,8 @@ int fs_mkdir(const char *pathname, mode_t mode)
     fs_dir* newDir = createInode(I_DIR, pathname);
     if (newDir != NULL)
     {
-        LBAwrite(inodes, getVCB()->totalInodeBlocks, getVCB()->inodeStartBlock);
+        writeInodes();
+        //LBAwrite(inodes, getVCB()->totalInodeBlocks, getVCB()->inodeStartBlock);
         return 0;
     }
 
@@ -330,7 +320,6 @@ struct fs_dirEntry *fs_readdir(fs_dir *dirp)
         return NULL;
     }
 
-    // Based on the following: "readdir returns a pointer to a dirent structure representing the next directory entry"
     // Get inode
     fs_dir* inode = getInode(dirp->path);
 
