@@ -107,7 +107,7 @@ char* getPathName()
 char* getParentPath(char* buf, const char* path)
 {
     // Parse the path into a tokenized array of path levels
-    parsePath(path);
+    parseFilePath(path);
 
     char parentPath[MAX_FILEPATH_SIZE] = "";
 
