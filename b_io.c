@@ -90,6 +90,7 @@ int b_open(char * filename, int flags) {
             */
             
             
+            
             // Write changes to disk
 			// writeInodes();
             inode->sizeInBytes = 0;
