@@ -26,15 +26,23 @@
 #include "fsVCB.h"
 #include "b_io.h"
 
-// Current working directory path
-char cwdPath[MAX_FILEPATH_SIZE];
-char cwdPathArray[MAX_DIRECTORY_DEPTH][MAX_FILENAME_SIZE];
-int cwdPathArraySize = 0;
+void fs_init() 
+{
+    int rc = initInodeArray();
+    if (rc == 0)
+    {
+        fs_close();
+        exit(0);
+    }
+    
+    // Initialize the root directory
+    fs_setcwd("/root");
+}
 
-// After parsing a path, holds each 'level' of the requested file's path
-char requestFilePathArray[MAX_DIRECTORY_DEPTH][MAX_FILENAME_SIZE];
-int requestFilePathArraySize = 0;
-int pathIsAbsolute = 0;
+void fs_close()
+{
+    closeInodeArray();
+}
 
 void parseFilePath(const char *pathname)
 {
@@ -96,21 +104,6 @@ char* getPathName()
     return requestFilePathArray[requestFilePathArraySize - 1];
 }
 
-char* getPathNameAtIndex(int index)
-{
-    return requestFilePathArray[index];
-}
-
-int getPathArraySize()
-{
-    return requestFilePathArraySize;
-}
-
-int getIsAbsolute()
-{
-    return pathIsAbsolute;
-}
-
 char* getParentPath(char* buf, const char* path)
 {
     // Parse the path into a tokenized array of path levels
@@ -170,24 +163,6 @@ int setParent(fs_dir* parent, fs_dir* child)
 
     printf("Set parent of '%s' to '%s'.\n", child->path, child->parent);
     return 1;
-}
-
-void fs_init() 
-{
-    int rc = initInodeArray();
-    if (rc == 0)
-    {
-        fs_close();
-        exit(0);
-    }
-    
-    // Initialize the root directory
-    fs_setcwd("/root");
-}
-
-void fs_close()
-{
-    closeInodeArray();
 }
 
 int fs_mkdir(const char *pathname, mode_t mode)
