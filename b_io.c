@@ -73,7 +73,13 @@ int b_open(char * filename, int flags) {
     if(inode == NULL) {
         // printf("inodeName: %s | inUse: %d\n", inode->name, inode->inUse);
         if(flags & O_CREAT) {
+            printf("createInode with flags\n");
             inode = createInode(I_FILE, filename);
+            if (inode == NULL)
+            {
+                printf("Failed to create inode.\n");
+                return -1;
+            }
 
             /*
             // Add the parent to the inode
