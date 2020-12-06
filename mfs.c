@@ -116,6 +116,7 @@ int setParent(fs_dir* parent, fs_dir* child)
     {
         if (!strcmp(parent->children[i], child->name)) 
         {
+            printf("Child %s already exists\n", child->name);
             childExists = 1;
         }
     }
@@ -174,7 +175,7 @@ fs_dir* createInode(InodeType type, const char* path)
     if (!setParent(parentNode, inode)) 
     {
         freeInode(inode);
-        printf("Failed to set parent.\n");
+        // printf("Failed to set parent.\n");
         return NULL;
     }
 
