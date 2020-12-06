@@ -143,7 +143,7 @@ void initializeInodes()
         // Set each inode datablock to invalid (not initialized)
         for (int j = 0; j < MAX_DATABLOCK_POINTERS; j++) 
         {
-            inodes[i].directBlockPointers[j] = INVALID_DATABLOCK_POINTER;
+            inodes[i].directBlockPointers[j] = -1;
         }
         inodes[i].numDirectBlockPointers = 0;
     }

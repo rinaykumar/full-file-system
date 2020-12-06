@@ -26,8 +26,6 @@
 #define MAX_DIRECTORY_DEPTH 10
 #define MAX_NUMBER_OF_CHILDREN 64
 #define MAX_DATABLOCK_POINTERS	64
-#define INVALID_DATABLOCK_POINTER -1
-#define INVALID_INODE_NAME	"unused_inode"
 
 #include <dirent.h>
 #define FT_REGFILE	DT_REG
@@ -92,9 +90,10 @@ int fs_delete(char* filename);	//removes a file
 /* Other functions */
 void fs_init();
 void fs_close();
-int setParent(fs_dir* parent, fs_dir* child);
+char* getPathName();
 char* getParentPath(char* buf, const char* path);
-fs_dir* createInode(InodeType type, const char* path);
+int setParent(fs_dir* parent, fs_dir* child);
+//fs_dir* createInode(InodeType type, const char* path);
 
 struct fs_stat
 	{
@@ -106,8 +105,6 @@ struct fs_stat
 	time_t    st_createtime;   	/* time of last status change */
 	
 	/* add additional attributes here for your file system */
-	ino_t     st_ino;     /* inode index number */
-	mode_t    st_mode;    /* protection mode */
 	};
 
 int fs_stat(const char *path, struct fs_stat *buf);

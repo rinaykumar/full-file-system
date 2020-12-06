@@ -26,6 +26,9 @@
 #include "fsVCB.h"
 #include "b_io.h"
 
+// Holds the inodes for the file system
+fs_dir* inodes;
+
 // Current working directory path
 char cwdPath[MAX_FILEPATH_SIZE];
 char cwdPathArray[MAX_DIRECTORY_DEPTH][MAX_FILENAME_SIZE];
@@ -91,6 +94,11 @@ void parseFilePath(const char *pathname)
     }
 }
 
+char* getPathName()
+{
+    return requestFilePathArray[requestFilePathArraySize - 1];
+}
+
 char* getParentPath(char* buf, const char* path)
 {
     // Parse the path into a tokenized array of path levels
@@ -152,41 +160,6 @@ int setParent(fs_dir* parent, fs_dir* child)
     return 1;
 }
 
-fs_dir* createInode(InodeType type, const char* path)
-{
-    fs_dir * inode;
-    char parentPath[MAX_FILEPATH_SIZE];
-    fs_dir* parentNode;
-
-    // Set the current creation time
-    time_t currentTime;
-    currentTime = time(NULL);
-
-    // Find and assign the parent to the new inode
-    inode = getFreeInode();
-    getParentPath(parentPath, path);
-    parentNode = getInode(parentPath);
-
-    // Set inode info
-    inode->type = type;
-    strcpy(inode->name , requestFilePathArray[requestFilePathArraySize - 1]);
-    sprintf(inode->path, "%s/%s", parentPath, inode->name);
-    inode->lastAccessTime = currentTime;
-    inode->lastModificationTime = currentTime;
-
-    // Set the inode's parent
-    if (!setParent(parentNode, inode)) 
-    {
-        freeInode(inode);
-        // printf("Failed to set parent.\n");
-        return NULL;
-    }
-
-    printf("Sucessfully created inode for path '%s'.\n", path);       
-    return inode;
-}
-
-fs_dir* inodes;
 void fs_init() 
 {
     printf("totalInodeBlocks %ld, blockSize %ld\n", getVCB()->totalInodeBlocks, getVCB()->blockSize);
@@ -241,7 +214,7 @@ int fs_mkdir(const char *pathname, mode_t mode)
         for (int i = 0; i < parentDir->numChildren; i++)
         {
             // Compare current child's name to the request file path level
-            int dirExists = strcmp(parentDir->children[i], requestFilePathArray[requestFilePathArraySize - 1]);
+            int dirExists = strcmp(parentDir->children[i], getPathName());
             if (dirExists == 0)
             {
                 printf("mkdir: Directory %s already exists.\n", parentDir->children[i]);
@@ -607,21 +580,17 @@ int fs_stat(const char *path, struct fs_stat *buf)
     fs_dir* inode = getInode(fullPath);
 
     // if inode exists
-    if (inode) {
+    if (inode) 
+    {
         // set info for buf
         buf->st_size = inode->sizeInBytes;
-        
-        // st_blksize = getVCB()->blockSize
         buf->st_blksize = getVCB()->blockSize;
-        
-        // st_blocks = 2
         buf->st_blocks = 2;
         
         // Access and modification times
         buf->st_accesstime = inode->lastAccessTime;
         buf->st_modtime = inode->lastModificationTime;
-
-        // buf->st_createtime = ?
+        buf->st_createtime = time(0);
 
         return 1;
     }

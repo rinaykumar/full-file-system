@@ -15,15 +15,7 @@
 #include "fsVCB.h"
 
 fs_dir* inodes;
-char inodeTypeNames[3][64] = { "I_FILE", "I_DIR", "I_UNUSED" };
 
-char* getInodeTypeName(char* buf, InodeType type)
-{
-    strcpy(buf, inodeTypeNames[type]);
-    return buf;
-}
-
-/*
 fs_dir* createInode(InodeType type, const char* path)
 {
     fs_dir * inode;
@@ -41,7 +33,7 @@ fs_dir* createInode(InodeType type, const char* path)
 
     // Set inode info
     inode->type = type;
-    strcpy(inode->name , requestFilePathArray[requestFilePathArraySize - 1]);
+    strcpy(inode->name , getPathName());
     sprintf(inode->path, "%s/%s", parentPath, inode->name);
     inode->lastAccessTime = currentTime;
     inode->lastModificationTime = currentTime;
@@ -50,14 +42,13 @@ fs_dir* createInode(InodeType type, const char* path)
     if (!setParent(parentNode, inode)) 
     {
         freeInode(inode);
-        printf("Failed to set parent.\n");
+        // printf("Failed to set parent.\n");
         return NULL;
     }
 
     printf("Sucessfully created inode for path '%s'.\n", path);       
     return inode;
 }
-*/
 
 // Get inode with specified path
 fs_dir* getInode(const char *path)
@@ -126,7 +117,7 @@ int writeBufferToInode(fs_dir * inode, char* buffer, size_t bufSizeBytes, uint64
     int freeIndex = -1;
     for (int i = 0; i < MAX_DATABLOCK_POINTERS; i++) 
     {
-        if (inode->directBlockPointers[i] == INVALID_DATABLOCK_POINTER) 
+        if (inode->directBlockPointers[i] == -1) 
         {
             freeIndex = i;
             break;
