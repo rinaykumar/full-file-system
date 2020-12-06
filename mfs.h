@@ -39,6 +39,15 @@ typedef u_int64_t uint64_t;
 typedef u_int32_t uint32_t;
 #endif
 
+// Current working directory path
+char cwdPath[MAX_FILEPATH_SIZE];
+char cwdPathArray[MAX_DIRECTORY_DEPTH][MAX_FILENAME_SIZE];
+int cwdPathArraySize;
+
+// After parsing a path, holds each 'level' of the requested file's path
+char requestFilePathArray[MAX_DIRECTORY_DEPTH][MAX_FILENAME_SIZE];
+int requestFilePathArraySize;
+int pathIsAbsolute;
 
 struct fs_dirEntry
 {
@@ -93,7 +102,7 @@ void fs_close();
 char* getPathName();
 char* getParentPath(char* buf, const char* path);
 int setParent(fs_dir* parent, fs_dir* child);
-//fs_dir* createInode(InodeType type, const char* path);
+fs_dir* createInode(InodeType type, const char* path);
 
 struct fs_stat
 	{

@@ -509,10 +509,12 @@ int cmd_cp2l (int argcnt, char *argvec[])
 	
 	
 	testfs_fd = b_open (src, O_RDONLY);
+	printf("CP2L: testfs_fd = %d\n", testfs_fd);
 	linux_fd = open (dest, O_WRONLY | O_CREAT | O_TRUNC);
 	do 
 		{
 		readcnt = b_read (testfs_fd, buf, BUFFERLEN);
+		//printf("CP2L: readcnt = %d\n", readcnt);
 		write (linux_fd, buf, readcnt);
 		} while (readcnt == BUFFERLEN);
 	b_close (testfs_fd);

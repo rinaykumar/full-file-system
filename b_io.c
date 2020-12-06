@@ -67,7 +67,19 @@ int b_open(char * filename, int flags) {
         b_init();
     }
 
-    fs_dir* inode = getInode(filename);
+    parseFilePath(filename);
+
+    char fullPath[MAX_FILEPATH_SIZE] = "";
+    for (int i = 0; i < requestFilePathArraySize; i++) 
+    {
+        // Add a separator between each path level
+        strcat(fullPath, "/");
+        strcat(fullPath, requestFilePathArray[i]);
+    }
+
+    printf("fullPath = %s", fullPath);
+    printf("BOPEN filename = %s", filename);
+    fs_dir* inode = getInode(fullPath);
     
     //if directory entry does not exist, create one and initialize if create flag is set
     if(inode == NULL) {
@@ -94,8 +106,6 @@ int b_open(char * filename, int flags) {
             // Write changes to disk
 			// writeInodes();
             inode->sizeInBytes = 0;
-        } else {
-            return -1;
         }
     }
 
@@ -114,6 +124,7 @@ int b_open(char * filename, int flags) {
     }
 
     //initialize and return index
+    printf("BOPEN inode = %s\n", inode->name);
     fcbArray[index].file = inode;
     fcbArray[index].buf = malloc(BUFSIZE);
     fcbArray[index].block = 0;
@@ -137,11 +148,14 @@ int b_read(int fd, char * buffer, int count) {
 
     //check if fd is between 0 and MAXFCBS-1
     if((fd < 0) || (fd >= MAXFCBS)) {
+        printf("BREAD 1\n");
         return -1;
     }
 
     //check if the file is opened
     if(fcbArray[fd].file == NULL) {
+        printf("BREAD fcbarry = %s\n", fcbArray[fd].file->name);
+        printf("BREAD 2\n");
         return -1;
     }
 
@@ -182,6 +196,7 @@ int b_read(int fd, char * buffer, int count) {
 
         //error handling if read fails
         if(bytesRead == 0) {
+            printf("BREAD 3\n");
             return -1;
         }
 

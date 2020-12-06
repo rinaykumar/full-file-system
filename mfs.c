@@ -29,15 +29,7 @@
 // Holds the inodes for the file system
 fs_dir* inodes;
 
-// Current working directory path
-char cwdPath[MAX_FILEPATH_SIZE];
-char cwdPathArray[MAX_DIRECTORY_DEPTH][MAX_FILENAME_SIZE];
-int cwdPathArraySize = 0;
 
-// After parsing a path, holds each 'level' of the requested file's path
-char requestFilePathArray[MAX_DIRECTORY_DEPTH][MAX_FILENAME_SIZE];
-int requestFilePathArraySize = 0;
-int pathIsAbsolute = 0;
 
 void parseFilePath(const char *pathname)
 {
