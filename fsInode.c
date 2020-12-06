@@ -95,18 +95,6 @@ fs_dir* getFreeInode()
     return NULL;
 }
 
-fs_dir* getInodeByIndex(int index) 
-{
-    if (index < getVCB()->totalInodes && index >= 0) 
-    {
-        return &inodes[index];
-    } 
-    else 
-    {
-        return NULL;
-    }
-}
-
 int removeFromParent(fs_dir* parent, fs_dir* child) 
 {
     // Find matching requested child from parent list
@@ -175,9 +163,6 @@ void freeInode(fs_dir * inode)
     strcpy(inode->name, "\0");
     strcpy(inode->path, "\0");
     strcpy(inode->parent, "\0");
-    //node->name[0] = NULL;
-    //node->path[0] = NULL;
-    //node->parent[0] = NULL;
     inode->sizeInBlocks = 0;
     inode->sizeInBytes = 0;
     inode->lastAccessTime = 0;
