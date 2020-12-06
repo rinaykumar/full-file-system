@@ -9,6 +9,7 @@
 * Description: Header file for fsVolume.c
 *
 **************************************************************/
+#include <stdio.h>
 #include "mfs.h"
 #include "fsLow.h"
 

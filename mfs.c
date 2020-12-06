@@ -107,7 +107,7 @@ char* getPathName()
 char* getParentPath(char* buf, const char* path)
 {
     // Parse the path into a tokenized array of path levels
-    parseFilePath(path);
+    parsePath(path);
 
     char parentPath[MAX_FILEPATH_SIZE] = "";
 
@@ -168,7 +168,7 @@ int setParent(fs_dir* parent, fs_dir* child)
 int fs_mkdir(const char *pathname, mode_t mode)
 {
     // Parse the path into a tokenized array of path levels
-    parseFilePath(pathname);
+    parsePath(pathname);
 
     // Combine tokens into a single char string; gets the parent of the called level
     char parentPath[256] = "";
@@ -321,7 +321,7 @@ struct fs_dirEntry *fs_readdir(fs_dir *dirp)
     // Increment child index
     childIndex++;
     
-    // Retun directory entry
+    // Return directory entry
     return &dirEntry;
 }
 
@@ -349,7 +349,7 @@ char* fs_getcwd(char *buf, size_t size)
 int fs_setcwd(char *buf) 
 {
     // Parse the path into a tokenized array of path levels
-    parseFilePath(buf);
+    parsePath(buf);
 
     // Piece together the full file path
     char fullPath[MAX_FILEPATH_SIZE] = "";
