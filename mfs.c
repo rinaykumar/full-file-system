@@ -440,6 +440,12 @@ int fs_isFile(char * path)
     // Get the inode from path
     fs_dir* inode = getInode(fullPath);
 
+    if (!inode) 
+    {
+        printf("File '%s' does not exist.\n", fullPath);
+        return 0;
+    }
+
     // Check inode type
     if (inode->type == I_FILE) {
         return 1;
@@ -466,6 +472,11 @@ int fs_isDir(char * path)
 
     // Get the inode from path
     fs_dir* inode = getInode(fullPath);
+    if (!inode) 
+    {
+        printf("Directory '%s' does not exist.\n", fullPath);
+        return 0;
+    }
 
     // Check inode type
     if (inode->type == I_DIR) {
