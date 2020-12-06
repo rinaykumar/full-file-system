@@ -167,7 +167,17 @@ void freeInode(fs_dir * inode)
     inode->sizeInBytes = 0;
     inode->lastAccessTime = 0;
     inode->lastModificationTime = 0;
+    inode->fd = -1;
 
+    if (inode->numChildren > 0)
+    {
+        for (int i = 0; i < inode->numChildren; i++)
+        {
+            strcpy(inode->children[i], "");
+            inode->numChildren--;
+        }
+    }
+    
     // If the inode is a file, free all related data block pointers
     if (inode->type == I_FILE)
     {
