@@ -168,7 +168,7 @@ int setParent(fs_dir* parent, fs_dir* child)
 int fs_mkdir(const char *pathname, mode_t mode)
 {
     // Parse the path into a tokenized array of path levels
-    parsePath(pathname);
+    parseFilePath(pathname);
 
     // Combine tokens into a single char string; gets the parent of the called level
     char parentPath[256] = "";
@@ -349,7 +349,7 @@ char* fs_getcwd(char *buf, size_t size)
 int fs_setcwd(char *buf) 
 {
     // Parse the path into a tokenized array of path levels
-    parsePath(buf);
+    parseFilePath(buf);
 
     // Piece together the full file path
     char fullPath[MAX_FILEPATH_SIZE] = "";
