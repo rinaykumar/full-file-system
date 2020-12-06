@@ -23,6 +23,11 @@
 #include <fcntl.h>
 
 #include "mfs.h"
+#include "fsVCB.h"
+#include "fsLow.h"
+#include "fsInode.h"
+#include "bitMap.h"
+#include "b_io.h"
 
 /***************  START LINUX TESTING CODE FOR SHELL ***************/
 #define TEMP_LINUX 0  //MUST be ZERO for working with your file system
@@ -42,16 +47,16 @@
 	
 	fdDir * fs_opendir(const char *name)
 		{
-		DIR * dir;
-		dir = opendir(name);
-		return ((fdDir *) dir);
+		fs_dirEntry * dir;
+		dir = fs_opendir(name);
+		return ((fs_dirEntry *) dir);
 		}
 	
-	struct fs_diriteminfo fsDi;	
-	struct fs_diriteminfo *fs_readdir(fdDir *dirp)
+	struct fs_dir fsDi;	
+	struct fs_dir *fs_readdir(fdDir *dirp)
 		{
-		DIR *dir;
-		dir = (DIR *) dirp;
+		fs_dirEntry *dir;
+		dir = (fs_dirEntry *) dirp;
 		struct dirent * de;
 		de = readdir (dir);
 		if (de == NULL)
@@ -64,10 +69,10 @@
 		return (&fsDi);
 		}
 		
-	int fs_closedir(fs_DIR *dirp)
+	int fs_closedir(fs_dirEntry *dirp)
 		{
-		DIR *dir;
-		dir = (DIR *) dirp;
+		fs_dirEntry *dir;
+		dir = (fs_dirEntry *) dirp;
 		return (closedir (dir));
 		}
 
@@ -157,11 +162,12 @@ int displayFiles (fs_dir * dirp, int flall, int fllong)
 	{
 	if (dirp == NULL)	//get out if error
 		return (-1);
-	
+		
 	struct fs_dirEntry * di;
 	struct fs_stat statbuf;
 	
 	di = fs_readdir (dirp);
+	// printf("di: %s\n", di->d_name);
 	printf("\n");
 	while (di != NULL) 
 		{
@@ -285,6 +291,7 @@ int cmd_ls (int argcnt, char *argvec[])
 		char * path = fs_getcwd(cwd, DIRMAX_LEN);	//get current working directory
 		fs_dir * dirp;
 		dirp = fs_opendir (path);
+		//printf("shell: dirp = %s\n", dirp->name);
 		return (displayFiles (dirp, flall, fllong));
 		}
 	return 0;
@@ -346,7 +353,7 @@ int cmd_mv (int argcnt, char *argvec[])
 	// **** TODO ****  For you to implement	
 	//check if argcnt == 3
 	if(argcnt != 3) {
-		printf("Usage: mv source destination");
+		printf("Usage: mv source destination\n");
 		return (-1);
 	} else {
 		//check if source and destination is relative path
@@ -354,7 +361,7 @@ int cmd_mv (int argcnt, char *argvec[])
 		char* dest = argvec[2];
 		char* cwd;
 		char* destName;
-		if(source[0] != "/") {
+		if(source[0] != '/') {
 			//get current working directory
 			getcwd(cwd, DIRMAX_LEN);
 
@@ -363,7 +370,7 @@ int cmd_mv (int argcnt, char *argvec[])
 			source = cwd;
 		}
 
-		if(dest[0] != "/") {
+		if(dest[0] != '/') {
 			destName = dest;
 			//get current working directory and concatenate to dest
 			getcwd(cwd, DIRMAX_LEN);
@@ -372,11 +379,11 @@ int cmd_mv (int argcnt, char *argvec[])
 		}
 
 		//if destination does not exist, create one
-		fs_dir* destEntry = opendir(dest);
+		fs_dir* destEntry = fs_opendir(dest);
 		InodeType destType;
 		if(destEntry == NULL) {
 			//check whether the destination is file or not
-			if(dest[strlen(dest) - 4] == ".") {
+			if(dest[strlen(dest) - 4] == '.') {
 				destType = I_FILE;
 			} else {
 				destType = I_DIR;
@@ -388,12 +395,12 @@ int cmd_mv (int argcnt, char *argvec[])
 		//check whether destination is file or directory
 		destType = destEntry->type;
 		int moved;
-		fs_dir* sourceEntry = opendir(source);
+		fs_dir* sourceEntry = fs_opendir(source);
 		if(destType == I_DIR) {
 			//if directory, put source as the child of dest
 			char* srcParentPath;
 			getParentPath(srcParentPath, source);
-			fs_dir* oldParent = opendir(srcParentPath);
+			fs_dir* oldParent = fs_opendir(srcParentPath);
 			int removed = removeFromParent(oldParent, sourceEntry);
 			if(removed == 0) {
 				printf("Error: cannot remove from parent.");
@@ -458,7 +465,7 @@ int cmd_rm (int argcnt, char *argvec[])
 	//must determine if file or directory
 	if (fs_isDir (path))
 		{
-		return (fs_rmdir (path));
+		return (fs_rmdir(path));
 		}		
 	if (fs_isFile (path))
 		{
@@ -506,6 +513,7 @@ int cmd_cp2l (int argcnt, char *argvec[])
 	do 
 		{
 		readcnt = b_read (testfs_fd, buf, BUFFERLEN);
+		printf("CP2l: readcnt = %d\n", readcnt);
 		write (linux_fd, buf, readcnt);
 		} while (readcnt == BUFFERLEN);
 	b_close (testfs_fd);
@@ -580,7 +588,7 @@ int cmd_cd (int argcnt, char *argvec[])
 			path[strlen(path) - 1] = 0;
 			}
 		}
-	int ret = fs_setcwd (path);
+	int ret = fs_setcwd(path);
 	if (ret != 0)	//error
 		{
 		printf ("Could not change path to %s\n", path);
@@ -755,6 +763,17 @@ void processcommand (char * cmd)
 	cmdv = NULL;
 	}
 
+void initFileSystem(char* volumeName) 
+{
+	openVolume(volumeName);
+	fs_init();
+}
+
+void closeFileSystem() 
+{
+	fs_close();
+	closeVolume();
+}
 
 
 int main (int argc, char * argv[])
@@ -765,6 +784,10 @@ int main (int argc, char * argv[])
 		
 	using_history();
 	stifle_history(200);	//max history entries
+
+	char volumeName[MAX_FILENAME_SIZE];
+    strcpy(volumeName, argv[1]);
+	initFileSystem(volumeName);
 	
 	while (1)
 		{
@@ -799,4 +822,6 @@ int main (int argc, char * argv[])
 		free (cmd);
 		cmd = NULL;		
 		} // end while
+
+		closeFileSystem();
 	}

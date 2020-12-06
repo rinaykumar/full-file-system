@@ -18,16 +18,14 @@
 #include <unistd.h>
 #include <time.h>
 
-#include "fsVCB.h"
-#include "fsInode.h"
+// #include "fsVCB.h"
+// #include "fsInode.h"
 
 #define MAX_FILEPATH_SIZE 225
 #define	MAX_FILENAME_SIZE 20
 #define MAX_DIRECTORY_DEPTH 10
 #define MAX_NUMBER_OF_CHILDREN 64
 #define MAX_DATABLOCK_POINTERS	64
-#define INVALID_DATABLOCK_POINTER -1
-#define INVALID_INODE_NAME	"unused_inode"
 
 #include <dirent.h>
 #define FT_REGFILE	DT_REG
@@ -41,6 +39,15 @@ typedef u_int64_t uint64_t;
 typedef u_int32_t uint32_t;
 #endif
 
+// Current working directory path
+char cwdPath[MAX_FILEPATH_SIZE];
+char cwdPathArray[MAX_DIRECTORY_DEPTH][MAX_FILENAME_SIZE];
+int cwdPathArraySize;
+
+// After parsing a path, holds each 'level' of the requested file's path
+char requestFilePathArray[MAX_DIRECTORY_DEPTH][MAX_FILENAME_SIZE];
+int requestFilePathArraySize;
+int pathIsAbsolute;
 
 struct fs_dirEntry
 {
@@ -60,6 +67,7 @@ typedef struct
 	char path[MAX_FILEPATH_SIZE];  // File path
 
 	int inUse;
+	int fd;
 	uint64_t inodeIndex;
 	InodeType type;
 
@@ -78,7 +86,7 @@ typedef struct
 
 int fs_mkdir(const char *pathname, mode_t mode);
 int fs_rmdir(const char *pathname);
-fs_dir* fs_opendir(const char *name);
+fs_dir* fs_opendir(char *pathname);
 struct fs_dirEntry *fs_readdir(fs_dir *dirp);
 int fs_closedir(fs_dir *dirp);
 
@@ -91,9 +99,11 @@ int fs_delete(char* filename);	//removes a file
 /* Other functions */
 void fs_init();
 void fs_close();
-int setParent(fs_dir* parent, fs_dir* child);
-int removeChild(fs_dir* parent, fs_dir* child);
+void parseFilePath(const char *pathname);
+char* getPathName();
 char* getParentPath(char* buf, const char* path);
+int setParent(fs_dir* parent, fs_dir* child);
+//fs_dir* createInode(InodeType type, const char* path);
 
 struct fs_stat
 	{
@@ -105,13 +115,6 @@ struct fs_stat
 	time_t    st_createtime;   	/* time of last status change */
 	
 	/* add additional attributes here for your file system */
-	dev_t     st_dev;     /* ID of device containing file */
-	ino_t     st_ino;     /* inode index number */
-	mode_t    st_mode;    /* protection mode */
-	nlink_t   st_nlink;   /* number of hard links */
-	uid_t     st_uid;     /* owner's user ID */
-	gid_t     st_gid;     /* owner's group ID */
-	dev_t     st_rdev;    /* device ID (if special file) */
 	};
 
 int fs_stat(const char *path, struct fs_stat *buf);

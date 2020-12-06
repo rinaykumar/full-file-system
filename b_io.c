@@ -66,35 +66,60 @@ int b_open(char * filename, int flags) {
     if(initialized == 0) {
         b_init();
     }
+    
+    // Parse the path into a tokenized array of path levels
+    parseFilePath(filename);
 
-    //find directory entry
-    char* filepath;
-    if(filename[0] != '/') {
-        char* cwd;
-        getcwd(cwd, MAX_FILEPATH_SIZE);
-        strcat(cwd, filename);
-        filepath = cwd;
-    } else {
-        filepath = filename;
+    // Combine tokens into a single char string; gets the parent of the called level
+    char fullPath[256] = "";
+    for (int i = 0; i < requestFilePathArraySize; i++)
+    {
+        // Append a '/' before each token
+        strcat(fullPath, "/");
+        strcat(fullPath, requestFilePathArray[i]);
     }
 
-    fs_dir* directoryEntry = getInode(filepath);
-
+    fs_dir* inode = getInode(fullPath);
+    
     //if directory entry does not exist, create one and initialize if create flag is set
-    if(directoryEntry == NULL) {
+    if(inode == NULL) {
+        // printf("inodeName: %s | inUse: %d\n", inode->name, inode->inUse);
         if(flags & O_CREAT) {
-            directoryEntry = createInode(I_FILE, filepath);
-            directoryEntry->sizeInBytes = 0;
-        } else {
+            //printf("createInode with flags\n");
+            inode = createInode(I_FILE, filename);
+            if (inode == NULL)
+            {
+                printf("Failed to create inode.\n");
+                return -1;
+            }
+
+            /*
+            // Add the parent to the inode
+            char parentPath[MAX_FILENAME_SIZE];
+			getParentPath(parentPath, filename);
+			fs_dir* parentInode = getInode(parentInode);
+			setParent(parentInode, inode);
+            */
+            
+            
+            
+            // Write changes to disk
+			// writeInodeArray();
+            inode->sizeInBytes = 0;
+        } 
+        /*
+        else 
+        {
             return -1;
         }
+        */
     }
 
     //if flag has trancate, reinitialize the file size to 0
     if(flags & O_TRUNC) {
-        directoryEntry->sizeInBytes = 0;
-        directoryEntry->numDirectBlockPointers = 0;
-        directoryEntry->sizeInBlocks = 0;
+        inode->sizeInBytes = 0;
+        inode->numDirectBlockPointers = 0;
+        inode->sizeInBlocks = 0;
     }
 
     //find empty fcb index
@@ -105,7 +130,7 @@ int b_open(char * filename, int flags) {
     }
 
     //initialize and return index
-    fcbArray[index].file = directoryEntry;
+    fcbArray[index].file = inode;
     fcbArray[index].buf = malloc(BUFSIZE);
     fcbArray[index].block = 0;
     fcbArray[index].buflen = 0;
@@ -328,7 +353,7 @@ void b_close(int fd) {
         fcbArray[fd].file->numDirectBlockPointers = fcbArray[fd].block;
         //error handling
         if(written == 0) {
-            printf("Error writing\n");
+           // printf("Error writing\n");
         }
     }
     

@@ -9,15 +9,36 @@
 * Description: Handles the Inode array. Holds information about each directory.
 *
 **************************************************************/
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 #include "fsInode.h"
+#include "fsVCB.h"
 
 fs_dir* inodes;
-char inodeTypeNames[3][64] = { "I_FILE", "I_DIR", "I_UNUSED" };
 
-char* getInodeTypeName(char* buf, InodeType type)
+int initInodeArray()
 {
-    strcpy(buf, inodeTypeNames[type]);
-    return buf;
+    printf("totalInodeBlocks %ld, blockSize %ld\n", getVCB()->totalInodeBlocks, getVCB()->blockSize);
+    inodes = calloc(getVCB()->totalInodeBlocks, getVCB()->blockSize);
+    printf("Inodes allocated at %p.\n", inodes);
+
+    uint64_t blocksRead = LBAread(inodes, getVCB()->totalInodeBlocks, getVCB()->inodeStartBlock);
+    printf("%ld inode blocks were read.\n", blocksRead);
+
+    // Return failed if not enough blocks read
+    if (blocksRead != getVCB()->totalInodeBlocks)
+    {
+        printf("fs_init: Failed to read all inode blocks.\n");
+        return 0;
+    }
+    return 1;
+}
+
+void closeInodeArray()
+{
+    free(inodes);
 }
 
 fs_dir* createInode(InodeType type, const char* path)
@@ -37,7 +58,7 @@ fs_dir* createInode(InodeType type, const char* path)
 
     // Set inode info
     inode->type = type;
-    // strcpy(inode->name , requestedFilePathArray[requestedFilePathArraySize - 1]);
+    strcpy(inode->name , getPathName());
     sprintf(inode->path, "%s/%s", parentPath, inode->name);
     inode->lastAccessTime = currentTime;
     inode->lastModificationTime = currentTime;
@@ -46,25 +67,28 @@ fs_dir* createInode(InodeType type, const char* path)
     if (!setParent(parentNode, inode)) 
     {
         freeInode(inode);
-        printf("Failed to set parent.\n");
+        // printf("Failed to set parent.\n");
         return NULL;
     }
 
-    printf("Sucessfully created inode for path '%s'.\n", path);       
+    //printf("Sucessfully created inode for path '%s'.\n", path);       
     return inode;
 }
 
-// Get inode with specified pathname
-fs_dir* getInode(const char *pathname)
+// Get inode with specified path
+fs_dir* getInode(const char *path)
 {
+    //printf("Searching for path: '%s'\n", path);
     for (int i = 0; i < getVCB()->totalInodes; i++) 
     {
-        printf("\tInode path: '%s'\n", inodes[i].path);
-        if (strcmp(inodes[i].path, pathname) == 0) 
+        //printf("Inode: (%s)\n", inodes[i].path);
+        if (strcmp(inodes[i].path, path) == 0) 
         {
+            //printf("Inode found! (%s)\n", path);
             return &inodes[i];
         }
     }
+    //printf("Failed to find inode. (%s)\n", path);
     return NULL;
 }
 
@@ -79,25 +103,12 @@ fs_dir* getFreeInode()
         {
             inodes[i].inUse = 1;
             freeInode = &inodes[i];
-            printf("Free inode found.\n");
             return freeInode;
         }
     }
 
     printf("No free inode found.\n");
     return NULL;
-}
-
-fs_dir* getInodeByIndex(int index) 
-{
-    if (index < getVCB()->totalInodes && index >= 0) 
-    {
-        return &inodes[index];
-    } 
-    else 
-    {
-        return NULL;
-    }
 }
 
 int removeFromParent(fs_dir* parent, fs_dir* child) 
@@ -131,7 +142,7 @@ int writeBufferToInode(fs_dir * inode, char* buffer, size_t bufSizeBytes, uint64
     int freeIndex = -1;
     for (int i = 0; i < MAX_DATABLOCK_POINTERS; i++) 
     {
-        if (inode->directBlockPointers[i] == INVALID_DATABLOCK_POINTER) 
+        if (inode->directBlockPointers[i] == -1) 
         {
             freeIndex = i;
             break;
@@ -161,25 +172,34 @@ int writeBufferToInode(fs_dir * inode, char* buffer, size_t bufSizeBytes, uint64
     return 1;
 }
 
-void freeInode(fs_dir * node)
+void freeInode(fs_dir * inode)
 {
-    printf("Freeing inode: '%s'\n", node->path);
-    node->inUse = 0;
-    node->type = I_UNUSED;
-    node->name[0] = NULL;
-    node->path[0] = NULL;
-    node->parent[0] = NULL;
-    node->sizeInBlocks = 0;
-    node->sizeInBytes = 0;
-    node->lastAccessTime = 0;
-    node->lastModificationTime = 0;
+    inode->inUse = 0;
+    inode->type = I_UNUSED;
+    strcpy(inode->name, "\0");
+    strcpy(inode->path, "\0");
+    strcpy(inode->parent, "\0");
+    inode->sizeInBlocks = 0;
+    inode->sizeInBytes = 0;
+    inode->lastAccessTime = 0;
+    inode->lastModificationTime = 0;
+    inode->fd = -1;
 
-    // If the inode is a file, free all related data block pointers
-    if(node->type == I_FILE)
+    if (inode->numChildren > 0)
     {
-        for (size_t i = 0; i < node->numDirectBlockPointers; i++) 
+        for (int i = 0; i < inode->numChildren; i++)
         {
-            int blockPointer = node->directBlockPointers[i];
+            strcpy(inode->children[i], "");
+            inode->numChildren--;
+        }
+    }
+    
+    // If the inode is a file, free all related data block pointers
+    if (inode->type == I_FILE)
+    {
+        for (int i = 0; i < inode->numDirectBlockPointers; i++) 
+        {
+            int blockPointer = inode->directBlockPointers[i];
             clearBit(getVCB()->freeMap, blockPointer);
         }
     }

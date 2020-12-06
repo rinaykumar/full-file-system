@@ -23,21 +23,30 @@
 #include <math.h>
 #include "mfs.h"
 #include "fsInode.h"
+#include "fsVCB.h"
+#include "b_io.h"
 
-// Current working directory path
-char cwdPath[MAX_FILEPATH_SIZE];
-char cwdPathArray[MAX_DIRECTORY_DEPTH][MAX_FILENAME_SIZE];
-int cwdPathArraySize = 0;
-
-// After parsing a path, holds each 'level' of the requested file's path
-char requestFilePath[MAX_FILEPATH_SIZE];
-char requestFilePathArray[MAX_DIRECTORY_DEPTH][MAX_FILENAME_SIZE];
-int requestFilePathArraySize = 0;
-
-void parsePath(const char *pathname)
+void fs_init() 
 {
-    // Set old path as empty (null terminator)
-    requestFilePath[0] = '\0';
+    int rc = initInodeArray();
+    if (rc == 0)
+    {
+        fs_close();
+        exit(0);
+    }
+    
+    // Initialize the root directory
+    fs_setcwd("/root");
+}
+
+void fs_close()
+{
+    closeInodeArray();
+}
+
+void parseFilePath(const char *pathname)
+{
+    pathIsAbsolute = 0;
     requestFilePathArraySize = 0;
 
     // Make a copy of path name for tokenization
@@ -50,6 +59,7 @@ void parsePath(const char *pathname)
 
     // Check for each type of path name
     int isAbsolute = pathname[0] == '/';
+    pathIsAbsolute = isAbsolute;
     int isParentRelative = !strcmp(currentToken, "..");
     int isSelfRelative = !strcmp(currentToken, ".");
 
@@ -64,6 +74,7 @@ void parsePath(const char *pathname)
         {
             depth = cwdPathArraySize;
         }
+        
 
         for (int i = 0; i < depth; i++)
         {
@@ -75,6 +86,7 @@ void parsePath(const char *pathname)
     // Skip token if relative path
     if (isParentRelative == 1 || isSelfRelative == 1)
     {
+        //printf("Path is relative\n");
         currentToken = strtok_r(0, "/", &pathSavePtr);
     }
 
@@ -85,6 +97,11 @@ void parsePath(const char *pathname)
         requestFilePathArraySize++;
         currentToken = strtok_r(0, "/", &pathSavePtr);
     }
+}
+
+char* getPathName()
+{
+    return requestFilePathArray[requestFilePathArraySize - 1];
 }
 
 char* getParentPath(char* buf, const char* path)
@@ -103,7 +120,7 @@ char* getParentPath(char* buf, const char* path)
     }
 
     strcpy(buf, parentPath);
-    printf("Input: %s, Parent Path: %s\n", path, buf);
+    // printf("Input: %s, Parent Path: %s\n", path, buf);
     return buf;
 }
 
@@ -115,6 +132,7 @@ int setParent(fs_dir* parent, fs_dir* child)
     {
         if (!strcmp(parent->children[i], child->name)) 
         {
+            printf("Child %s already exists\n", child->name);
             childExists = 1;
         }
     }
@@ -143,35 +161,8 @@ int setParent(fs_dir* parent, fs_dir* child)
     strcpy(child->parent, parent->path);
     sprintf(child->path, "%s/%s", parent->path, child->name);
 
-    printf("Set parent of '%s' to '%s'.\n", child->path, child->parent);
+    //printf("Set parent of '%s' to '%s'.\n", child->path, child->parent);
     return 1;
-}
-
-fs_dir* inodes;
-void fs_init() 
-{
-    printf("totalInodeBlocks %ld, blockSize %ld\n", getVCB()->totalInodeBlocks, getVCB()->blockSize);
-    inodes = calloc(getVCB()->totalInodeBlocks, getVCB()->blockSize);
-    printf("Inodes allocated at %p.\n", inodes);
-
-    uint64_t blocksRead = LBAread(inodes, getVCB()->totalInodeBlocks, getVCB()->inodeStartBlock);
-    printf("%ld inode blocks were read.\n", blocksRead);
-
-    // Return failed if not enough blocks read
-    if (blocksRead != getVCB()->totalInodeBlocks)
-    {
-        printf("fs_init: Failed to read all inode blocks.\n");
-        fs_close();
-        exit(0);
-    }
-
-    // Initialize the root directory
-    fs_setcwd("/root");
-}
-
-void fs_close()
-{
-    free(inodes);
 }
 
 int fs_mkdir(const char *pathname, mode_t mode)
@@ -179,13 +170,20 @@ int fs_mkdir(const char *pathname, mode_t mode)
     // Parse the path into a tokenized array of path levels
     parsePath(pathname);
 
-    // Combine tokens into a single char string
+    // Combine tokens into a single char string; gets the parent of the called level
     char parentPath[256] = "";
     for (int i = 0; i < requestFilePathArraySize - 1; i++)
     {
         // Append a '/' before each token
         strcat(parentPath, "/");
         strcat(parentPath, requestFilePathArray[i]);
+    }
+
+    // If path is absolute, check to see if it has /root
+    if (pathIsAbsolute == 1 && strcmp(requestFilePathArray[0], "root") != 0)
+    {
+        printf("fs_mkdir: /root is missing from absolute path name. (%s)\n", parentPath);
+        return -1;
     }
 
     // Return failure if directory already exists or if parent does not exist
@@ -195,10 +193,10 @@ int fs_mkdir(const char *pathname, mode_t mode)
         for (int i = 0; i < parentDir->numChildren; i++)
         {
             // Compare current child's name to the request file path level
-            int dirExists = strcmp(parentDir->children[i], requestFilePathArray[requestFilePathArraySize - 1]);
-            if (dirExists)
+            int dirExists = strcmp(parentDir->children[i], getPathName());
+            if (dirExists == 0)
             {
-                printf("mkdir: Directory already exists.");
+                printf("mkdir: Directory %s already exists.\n", parentDir->children[i]);
                 return -1;
             }
         }
@@ -214,6 +212,7 @@ int fs_mkdir(const char *pathname, mode_t mode)
     if (newDir != NULL)
     {
         writeInodes();
+        //LBAwrite(inodes, getVCB()->totalInodeBlocks, getVCB()->inodeStartBlock);
         return 0;
     }
 
@@ -223,41 +222,104 @@ int fs_mkdir(const char *pathname, mode_t mode)
 
 int fs_rmdir(const char *pathname)
 {
-    // Assuming inodes are used as directories
+    // Parse the path into a tokenized array of path levels
+    parseFilePath(pathname);
 
-    // Get the inode
-    fs_dir* inodeToRemove = getInode(pathname);
-    fs_dir* parentInode = getInode(inodeToRemove->parent);
+    // Piece together the full file path
+    char fullPath[MAX_FILEPATH_SIZE] = "";
+    for (int i = 0; i < requestFilePathArraySize; i++) 
+    {
+        // Add a separator between each path level
+        strcat(fullPath, "/");
+        strcat(fullPath, requestFilePathArray[i]);
+    }
+
+    // If path is absolute, check to see if it has /root
+    if (pathIsAbsolute == 1 && strcmp(requestFilePathArray[0], "root") != 0)
+    {
+        printf("fs_rmdir: /root is missing from absolute path name. (%s)\n", fullPath);
+        return -1;
+    }
+
+    // Check if inode exists
+    fs_dir* inodeToRemove = getInode(fullPath);
+    if (!inodeToRemove) 
+    {
+        printf("Directory '%s' does not exist.\n", fullPath);
+        return 1;
+    }
+
+    char parentPath[MAX_FILEPATH_SIZE];
+    getParentPath(parentPath, pathname);
+    fs_dir* parentInode = getInode(parentPath);
+    if (!parentInode) 
+    {
+        printf("Directory '%s' does not exist.\n", fullPath);
+        return 1;
+    }
 
     // Remove inode from parent
     removeFromParent(parentInode, inodeToRemove); // Need to access inode's parent and pass into function
 
     // Free inode
     freeInode(inodeToRemove);
-
     return 0;
 }
 
-fs_dir* fs_opendir(const char *name) 
+fs_dir* fs_opendir(char *pathname) 
 {
-    // Call getInode 
-    fs_dir* openedDir = getInode(name);
+    int openCode = b_open(pathname, 0);
+    if (openCode < 0)
+    {
+        printf("Open failed\n");
+        return NULL;
+    }
 
-    return openedDir;
+    // Parse the path into a tokenized array of path levels
+    parseFilePath(pathname);
+
+    // Piece together the full file path
+    char fullPath[MAX_FILEPATH_SIZE] = "";
+    for (int i = 0; i < requestFilePathArraySize; i++) 
+    {
+        // Add a separator between each path level
+        strcat(fullPath, "/");
+        strcat(fullPath, requestFilePathArray[i]);
+    }
+
+    // If path is absolute, check to see if it has /root
+    if (pathIsAbsolute == 1 && strcmp(requestFilePathArray[0], "root") != 0)
+    {
+        printf("fs_opendir: /root is missing from absolute path name. (%s)\n", fullPath);
+        return NULL;
+    }
+
+    fs_dir* inode = getInode(fullPath);
+    inode->fd = openCode;
+    return inode;
 }
 
 struct fs_dirEntry dirEntry;
+int childIndex = 0;
 struct fs_dirEntry *fs_readdir(fs_dir *dirp) 
 {
-    // Based on the following: "readdir returns a pointer to a dirent structure representing the next directory entry"
+    // Check if index is at the end
+    if (childIndex == dirp->numChildren)
+    {
+        childIndex = 0;
+        return NULL;
+    }
 
     // Get inode
     fs_dir* inode = getInode(dirp->path);
 
     // Set inode properties to directory entry
-    strcpy(dirEntry.d_name, inode->name);
+    strcpy(dirEntry.d_name, inode->children[childIndex]);
     dirEntry.d_ino = inode->inodeIndex;
     dirEntry.fileType = inode->type;
+
+    // Increment child index
+    childIndex++;
     
     // Return directory entry
     return &dirEntry;
@@ -265,8 +327,9 @@ struct fs_dirEntry *fs_readdir(fs_dir *dirp)
 
 int fs_closedir(fs_dir *dirp)
 {   
-    // Not sure what is supposed to be done here
-    freeInode(dirp);
+    int fd = dirp->fd;
+    b_close(fd);
+    return 0;
 }
 
 char* fs_getcwd(char *buf, size_t size) 
@@ -288,11 +351,41 @@ int fs_setcwd(char *buf)
     // Parse the path into a tokenized array of path levels
     parsePath(buf);
 
-    // Check if inode exists
-    fs_dir* inode = getInode(requestFilePath);
-    if (inode == NULL) 
+    // Piece together the full file path
+    char fullPath[MAX_FILEPATH_SIZE] = "";
+    for (int i = 0; i < requestFilePathArraySize; i++) 
     {
-        printf("Directory '%s' does not exist.\n", requestFilePath);
+        // Add a separator between each path level
+        strcat(fullPath, "/");
+        strcat(fullPath, requestFilePathArray[i]);
+    }
+
+    // If path is absolute, check to see if it has /root
+    if (pathIsAbsolute == 1 && strcmp(requestFilePathArray[0], "root") != 0)
+    {
+        printf("fs_setcwd: /root is missing from absolute path name. (%s)\n", fullPath);
+        return -1;
+    }
+
+    // Check if inode exists
+    fs_dir* inode = getInode(fullPath);
+    if (!inode) 
+    {
+        printf("Directory '%s' does not exist.\n", fullPath);
+        return 1;
+    }
+
+    // Check if already in root directory
+    if (strcmp(buf, "..") == 0 && strcmp(cwdPath, "/root") == 0) 
+    {
+        //printf("Already in root directory.\n");
+        return 1;
+    }
+
+    // Check if path is a file
+    if (inode->type != I_DIR) 
+    {
+        printf("Path not a directory. (%s)\n", fullPath);
         return 1;
     }
 
@@ -308,15 +401,40 @@ int fs_setcwd(char *buf)
         cwdPathArraySize++;
     }
 
-    printf("Set cwd to '%s'.\n", cwdPath);
+    //printf("Set cwd to '%s'.\n", cwdPath);
     return 0;
 }  
 
 // Return 1 if file, 0 otherwise
 int fs_isFile(char * path)
 {
+    // Parse the path into a tokenized array of path levels
+    parseFilePath(path);
+
+    // Piece together the full file path
+    char fullPath[MAX_FILEPATH_SIZE] = "";
+    for (int i = 0; i < requestFilePathArraySize; i++) 
+    {
+        // Add a separator between each path level
+        strcat(fullPath, "/");
+        strcat(fullPath, requestFilePathArray[i]);
+    }
+
+    // If path is absolute, check to see if it has /root
+    if (pathIsAbsolute == 1 && strcmp(requestFilePathArray[0], "root") != 0)
+    {
+        printf("fs_isFile: /root is missing from absolute path name. (%s)\n", fullPath);
+        return -1;
+    }
+
     // Get the inode from path
-    fs_dir* inode = getInode(path);
+    fs_dir* inode = getInode(fullPath);
+
+    if (!inode) 
+    {
+        printf("File '%s' does not exist.\n", fullPath);
+        return 0;
+    }
 
     // Check inode type
     if (inode->type == I_FILE) {
@@ -330,8 +448,32 @@ int fs_isFile(char * path)
 // Return 1 if directory, 0 otherwise
 int fs_isDir(char * path) 
 {
+    // Parse the path into a tokenized array of path levels
+    parseFilePath(path);
+
+    // Piece together the full file path
+    char fullPath[MAX_FILEPATH_SIZE] = "";
+    for (int i = 0; i < requestFilePathArraySize; i++) 
+    {
+        // Add a separator between each path level
+        strcat(fullPath, "/");
+        strcat(fullPath, requestFilePathArray[i]);
+    }
+
+    // If path is absolute, check to see if it has /root
+    if (pathIsAbsolute == 1 && strcmp(requestFilePathArray[0], "root") != 0)
+    {
+        printf("fs_isDir: /root is missing from absolute path name. (%s)\n", fullPath);
+        return -1;
+    }
+
     // Get the inode from path
-    fs_dir* inode = getInode(path);
+    fs_dir* inode = getInode(fullPath);
+    if (!inode) 
+    {
+        printf("Directory '%s' does not exist.\n", fullPath);
+        return 0;
+    }
 
     // Check inode type
     if (inode->type == I_DIR) {
@@ -345,55 +487,89 @@ int fs_isDir(char * path)
 // Removes a file
 int fs_delete(char* filename) 
 {
-    // First way:
+    // Parse the path into a tokenized array of path levels
+    parseFilePath(filename);
 
-    // Get all inodes, store into allInodes
-    // allInodes = all inodes
-    // Loop through inodes and check for filename match in children
-    // for (int i = 0; i < allInodes->numChildren; i++) {
-    //     if (strcmp(filename, allInodes->children[i])) {
-    //         // Delete child/file 
+    // Piece together the full file path
+    char fullPath[MAX_FILEPATH_SIZE] = "";
+    for (int i = 0; i < requestFilePathArraySize; i++) 
+    {
+        // Add a separator between each path level
+        strcat(fullPath, "/");
+        strcat(fullPath, requestFilePathArray[i]);
+    }
 
-    //         return 1;
-    //     }
-    // }
+    // If path is absolute, check to see if it has /root
+    if (pathIsAbsolute == 1 && strcmp(requestFilePathArray[0], "root") != 0)
+    {
+        printf("fs_delete: /root is missing from absolute path name. (%s)\n", fullPath);
+        return -1;
+    }
 
-    // Second way:
+    // Check if inode exists
+    fs_dir* inodeToRemove = getInode(fullPath);
+    if (!inodeToRemove) 
+    {
+        printf("File '%s' does not exist.\n", fullPath);
+        return 1;
+    }
 
-    // Get inode
-    fs_dir* inode = getInode(filename);
-    fs_dir* parentInode = getInode(inode->parent);
+    char parentPath[MAX_FILEPATH_SIZE];
+    getParentPath(parentPath, filename);
+    fs_dir* parentInode = getInode(parentPath);
+    if (!parentInode) 
+    {
+        printf("Directory '%s' does not exist.\n", fullPath);
+        return 1;
+    }
 
-    // Remove indoe from parent
-    removeFromParent(parentInode, inode);
+    // Remove inode from parent
+    removeFromParent(parentInode, inodeToRemove); // Need to access inode's parent and pass into function
+
+    // Close the file from our b_io
+    b_close(inodeToRemove->fd);
 
     // Free inode
-    freeInode(inode);
-
+    freeInode(inodeToRemove);
     return 0;
 }	
 
 int fs_stat(const char *path, struct fs_stat *buf) 
 {
+    // Parse the path into a tokenized array of path levels
+    parseFilePath(path);
+
+    // Piece together the full file path
+    char fullPath[MAX_FILEPATH_SIZE] = "";
+    for (int i = 0; i < requestFilePathArraySize; i++) 
+    {
+        // Add a separator between each path level
+        strcat(fullPath, "/");
+        strcat(fullPath, requestFilePathArray[i]);
+    }
+
+    // If path is absolute, check to see if it has /root
+    if (pathIsAbsolute == 1 && strcmp(requestFilePathArray[0], "root") != 0)
+    {
+        printf("fs_stat: /root is missing from absolute path name. (%s)\n", fullPath);
+        return -1;
+    }
+
     // get inode for path
-    fs_dir* inode = getInode(path);     // Should path be parsed first?
+    fs_dir* inode = getInode(fullPath);
 
     // if inode exists
-    if (inode) {
+    if (inode) 
+    {
         // set info for buf
         buf->st_size = inode->sizeInBytes;
-        
-        // st_blksize = getVCB()->blockSize
         buf->st_blksize = getVCB()->blockSize;
-        
-        // st_blocks = 2
         buf->st_blocks = 2;
         
         // Access and modification times
         buf->st_accesstime = inode->lastAccessTime;
         buf->st_modtime = inode->lastModificationTime;
-
-        // buf->st_createtime = ?
+        //buf->st_createtime = time(0);
 
         return 1;
     }

@@ -6,10 +6,14 @@
 *
 * File: fsInit.c
 *
-* Description: Responsible for calling fs_init and initializing inodes.
+* Description: Responsible for testing fs_init and volume.
 *
 **************************************************************/
 #include "mfs.h"
+#include "fsVCB.h"
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
 
 int main(int argc, char* argv[]) 
 {
