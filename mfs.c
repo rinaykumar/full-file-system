@@ -96,6 +96,21 @@ char* getPathName()
     return requestFilePathArray[requestFilePathArraySize - 1];
 }
 
+char* getPathNameAtIndex(int index)
+{
+    return requestFilePathArray[index];
+}
+
+int getPathArraySize()
+{
+    return requestFilePathArraySize;
+}
+
+int getIsAbsolute()
+{
+    return pathIsAbsolute;
+}
+
 char* getParentPath(char* buf, const char* path)
 {
     // Parse the path into a tokenized array of path levels

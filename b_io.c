@@ -66,6 +66,25 @@ int b_open(char * filename, int flags) {
     if(initialized == 0) {
         b_init();
     }
+    
+    // Parse the path into a tokenized array of path levels
+    parseFilePath(filename);
+
+    // Combine tokens into a single char string; gets the parent of the called level
+    char parentPath[256] = "";
+    for (int i = 0; i < getPathArraySize() - 1; i++)
+    {
+        // Append a '/' before each token
+        strcat(parentPath, "/");
+        strcat(parentPath, getPathNameAtIndex(i));
+    }
+
+    // If path is absolute, check to see if it has /root
+    if (getIsAbsolute() == 1 && strcmp(getPathNameAtIndex(0), "root") != 0)
+    {
+        printf("fs_mkdir: /root is missing from absolute path name. (%s)\n", parentPath);
+        return -1;
+    }
 
     fs_dir* inode = getInode(filename);
     

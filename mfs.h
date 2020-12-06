@@ -91,6 +91,9 @@ int fs_delete(char* filename);	//removes a file
 void fs_init();
 void fs_close();
 char* getPathName();
+char* getPathNameAtIndex(int index);
+int getIsAbsolute();
+int getPathArraySize();
 char* getParentPath(char* buf, const char* path);
 int setParent(fs_dir* parent, fs_dir* child);
 //fs_dir* createInode(InodeType type, const char* path);
