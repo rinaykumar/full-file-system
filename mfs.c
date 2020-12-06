@@ -86,7 +86,7 @@ void parseFilePath(const char *pathname)
     // Skip token if relative path
     if (isParentRelative == 1 || isSelfRelative == 1)
     {
-        printf("Path is relative\n");
+        //printf("Path is relative\n");
         currentToken = strtok_r(0, "/", &pathSavePtr);
     }
 
@@ -161,7 +161,7 @@ int setParent(fs_dir* parent, fs_dir* child)
     strcpy(child->parent, parent->path);
     sprintf(child->path, "%s/%s", parent->path, child->name);
 
-    printf("Set parent of '%s' to '%s'.\n", child->path, child->parent);
+    //printf("Set parent of '%s' to '%s'.\n", child->path, child->parent);
     return 1;
 }
 
@@ -378,7 +378,7 @@ int fs_setcwd(char *buf)
     // Check if already in root directory
     if (strcmp(buf, "..") == 0 && strcmp(cwdPath, "/root") == 0) 
     {
-        printf("Already in root directory.\n");
+        //printf("Already in root directory.\n");
         return 1;
     }
 
@@ -401,7 +401,7 @@ int fs_setcwd(char *buf)
         cwdPathArraySize++;
     }
 
-    printf("Set cwd to '%s'.\n", cwdPath);
+    //printf("Set cwd to '%s'.\n", cwdPath);
     return 0;
 }  
 
@@ -569,7 +569,7 @@ int fs_stat(const char *path, struct fs_stat *buf)
         // Access and modification times
         buf->st_accesstime = inode->lastAccessTime;
         buf->st_modtime = inode->lastModificationTime;
-        buf->st_createtime = time(0);
+        //buf->st_createtime = time(0);
 
         return 1;
     }

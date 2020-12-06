@@ -85,7 +85,7 @@ int b_open(char * filename, int flags) {
     if(inode == NULL) {
         // printf("inodeName: %s | inUse: %d\n", inode->name, inode->inUse);
         if(flags & O_CREAT) {
-            printf("createInode with flags\n");
+            //printf("createInode with flags\n");
             inode = createInode(I_FILE, filename);
             if (inode == NULL)
             {
@@ -353,7 +353,7 @@ void b_close(int fd) {
         fcbArray[fd].file->numDirectBlockPointers = fcbArray[fd].block;
         //error handling
         if(written == 0) {
-            printf("Error writing\n");
+           // printf("Error writing\n");
         }
     }
     

@@ -71,7 +71,7 @@ fs_dir* createInode(InodeType type, const char* path)
         return NULL;
     }
 
-    printf("Sucessfully created inode for path '%s'.\n", path);       
+    //printf("Sucessfully created inode for path '%s'.\n", path);       
     return inode;
 }
 

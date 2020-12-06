@@ -291,7 +291,7 @@ int cmd_ls (int argcnt, char *argvec[])
 		char * path = fs_getcwd(cwd, DIRMAX_LEN);	//get current working directory
 		fs_dir * dirp;
 		dirp = fs_opendir (path);
-		printf("shell: dirp = %s\n", dirp->name);
+		//printf("shell: dirp = %s\n", dirp->name);
 		return (displayFiles (dirp, flall, fllong));
 		}
 	return 0;
@@ -353,7 +353,7 @@ int cmd_mv (int argcnt, char *argvec[])
 	// **** TODO ****  For you to implement	
 	//check if argcnt == 3
 	if(argcnt != 3) {
-		printf("Usage: mv source destination");
+		printf("Usage: mv source destination\n");
 		return (-1);
 	} else {
 		//check if source and destination is relative path
@@ -513,6 +513,7 @@ int cmd_cp2l (int argcnt, char *argvec[])
 	do 
 		{
 		readcnt = b_read (testfs_fd, buf, BUFFERLEN);
+		printf("CP2l: readcnt = %d\n", readcnt);
 		write (linux_fd, buf, readcnt);
 		} while (readcnt == BUFFERLEN);
 	b_close (testfs_fd);
